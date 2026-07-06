@@ -57,6 +57,7 @@ def _empty_figure(message: str):
 def _metric_card(title: str, value: str, detail: str):
     return html.Div(
         [
+            html.Div(className="metric-rule"),
             html.Div(title, className="metric-title"),
             html.Div(value, className="metric-value"),
             html.Div(detail, className="metric-detail"),
@@ -77,8 +78,9 @@ def create_app(artifact_dir: Path = DEFAULT_ARTIFACT_DIR) -> Dash:
                 [
                     html.Div(
                         [
+                            html.Div("Synthetic Portfolio Evidence", className="eyebrow"),
                             html.H1("Maintenance Policy Evaluation"),
-                            html.P("Synthetic experiment tracking dashboard"),
+                            html.P("Policy rungs, non-routine workload signals, and tracked KPI artifacts."),
                         ],
                         className="title-block",
                     ),
@@ -112,8 +114,32 @@ def create_app(artifact_dir: Path = DEFAULT_ARTIFACT_DIR) -> Dash:
             html.Div(id="metric-strip", className="metric-strip"),
             html.Div(
                 [
-                    html.Div(dcc.Graph(id="policy-chart"), className="panel wide"),
-                    html.Div(dcc.Graph(id="nr-chart"), className="panel"),
+                    html.Div(
+                        [
+                            html.Div(
+                                [
+                                    html.H2("Policy Ladder"),
+                                    html.P("Compare the selected KPI across rungs and NR modes."),
+                                ],
+                                className="panel-heading",
+                            ),
+                            dcc.Graph(id="policy-chart"),
+                        ],
+                        className="panel wide",
+                    ),
+                    html.Div(
+                        [
+                            html.Div(
+                                [
+                                    html.H2("Reserve Alignment"),
+                                    html.P("Reserved vs realized NR labour by run."),
+                                ],
+                                className="panel-heading",
+                            ),
+                            dcc.Graph(id="nr-chart"),
+                        ],
+                        className="panel",
+                    ),
                 ],
                 className="grid",
             ),
@@ -158,58 +184,127 @@ def create_app(artifact_dir: Path = DEFAULT_ARTIFACT_DIR) -> Dash:
             {%favicon%}
             {%css%}
             <style>
+                :root {
+                    --ink: #172033;
+                    --muted: #65758b;
+                    --paper: #fbfcfe;
+                    --panel: #ffffff;
+                    --line: #d7e0ea;
+                    --navy: #102033;
+                    --teal: #0f766e;
+                    --amber: #b45309;
+                    --steel: #64748b;
+                }
                 body {
                     margin: 0;
-                    background: #eef2f7;
-                    color: #172033;
-                    font-family: "Segoe UI", "Aptos", sans-serif;
+                    background:
+                        linear-gradient(90deg, rgba(16, 32, 51, 0.035) 1px, transparent 1px),
+                        linear-gradient(180deg, rgba(16, 32, 51, 0.03) 1px, transparent 1px),
+                        var(--paper);
+                    background-size: 32px 32px;
+                    color: var(--ink);
+                    font-family: "Aptos", "Segoe UI", sans-serif;
                 }
-                .app-shell { padding: 24px; max-width: 1440px; margin: 0 auto; }
+                .app-shell { padding: 28px; max-width: 1480px; margin: 0 auto; }
                 .topbar {
                     display: grid;
-                    grid-template-columns: minmax(280px, 1fr) minmax(240px, 320px) minmax(220px, 300px);
+                    grid-template-columns: minmax(360px, 1fr) minmax(240px, 320px) minmax(220px, 300px);
                     gap: 16px;
                     align-items: end;
-                    margin-bottom: 18px;
+                    margin-bottom: 20px;
+                    padding-bottom: 18px;
+                    border-bottom: 2px solid var(--navy);
                 }
-                .title-block h1 { margin: 0; font-size: 28px; letter-spacing: 0; }
-                .title-block p { margin: 6px 0 0; color: #475569; }
+                .eyebrow {
+                    display: inline-block;
+                    color: var(--teal);
+                    font-size: 12px;
+                    font-weight: 800;
+                    letter-spacing: 0.08em;
+                    text-transform: uppercase;
+                    margin-bottom: 8px;
+                }
+                .title-block h1 { margin: 0; font-size: 34px; line-height: 1.05; letter-spacing: 0; }
+                .title-block p { margin: 8px 0 0; color: var(--muted); max-width: 760px; }
                 .control label {
                     display: block;
                     font-size: 12px;
                     font-weight: 700;
                     text-transform: uppercase;
-                    color: #475569;
+                    color: var(--muted);
                     margin-bottom: 6px;
+                }
+                .control .Select-control {
+                    border-color: var(--line);
+                    border-radius: 8px;
+                    min-height: 42px;
                 }
                 .metric-strip {
                     display: grid;
                     grid-template-columns: repeat(4, minmax(0, 1fr));
-                    gap: 12px;
-                    margin-bottom: 14px;
+                    gap: 14px;
+                    margin-bottom: 16px;
                 }
                 .metric-card, .panel {
-                    background: #ffffff;
-                    border: 1px solid #d9e2ef;
+                    background: var(--panel);
+                    border: 1px solid var(--line);
                     border-radius: 8px;
-                    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+                    box-shadow: 0 12px 30px rgba(16, 32, 51, 0.07);
                 }
-                .metric-card { padding: 14px 16px; min-height: 88px; }
+                .metric-card {
+                    position: relative;
+                    padding: 16px 18px 15px;
+                    min-height: 96px;
+                    overflow: hidden;
+                }
+                .metric-rule {
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    bottom: 0;
+                    width: 5px;
+                    background: linear-gradient(180deg, var(--teal), var(--amber));
+                }
                 .metric-title {
                     font-size: 12px;
                     font-weight: 700;
-                    color: #64748b;
+                    color: var(--muted);
                     text-transform: uppercase;
                 }
-                .metric-value { font-size: 28px; font-weight: 750; margin-top: 6px; }
-                .metric-detail { color: #64748b; font-size: 13px; margin-top: 2px; }
+                .metric-value { font-size: 30px; font-weight: 780; margin-top: 8px; line-height: 1.05; }
+                .metric-detail {
+                    color: var(--muted);
+                    font-size: 13px;
+                    margin-top: 5px;
+                    overflow-wrap: anywhere;
+                }
                 .grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 14px; }
-                .panel { padding: 10px; min-width: 0; }
+                .panel { padding: 12px; min-width: 0; }
+                .panel-heading {
+                    display: flex;
+                    align-items: baseline;
+                    justify-content: space-between;
+                    gap: 12px;
+                    padding: 2px 8px 0;
+                }
+                .panel-heading h2 {
+                    margin: 0;
+                    font-size: 16px;
+                    line-height: 1.2;
+                }
+                .panel-heading p {
+                    margin: 0;
+                    color: var(--muted);
+                    font-size: 13px;
+                    text-align: right;
+                }
                 .table-panel { margin-top: 14px; padding: 16px; }
                 .table-panel h2 { margin: 0 0 12px; font-size: 18px; }
                 @media (max-width: 980px) {
                     .app-shell { padding: 16px; }
                     .topbar, .grid, .metric-strip { grid-template-columns: 1fr; }
+                    .panel-heading { display: block; }
+                    .panel-heading p { text-align: left; margin-top: 4px; }
                 }
             </style>
         </head>
