@@ -1,0 +1,31 @@
+*.pyc
+*.pyo
+__pycache__/
+.venv/
+.venv1/
+.idea/
+
+# Generated simulator data and outputs.
+Data/input/
+Data/output/
+Data/pickle/
+mlruns/
+artifacts/
+reports/
+
+# Local/private data should never be committed.
+private/
+secrets/
+*.bak
+*.log
+*.zip
+*.7z
+*.pkl
+*.pickle
+*.pth
+*.pt
+*.onnx
+
+# Generated documents and notebook checkpoints.
+*.pdf
+.ipynb_checkpoints/

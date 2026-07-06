@@ -1,0 +1,17 @@
+coloredlogs==15.0.1
+dash==2.7.0
+distfit==1.4.5
+geographiclib==2.0
+gurobipy==10.0.1
+matplotlib==3.6.2
+numpy==1.22.3
+openpyxl==3.0.10
+pandas==1.4.2
+plotly==5.9.0
+pyodbc==4.0.32
+Pyomo==6.4.1
+pytz==2022.7
+scipy==1.7.3
+simpy==4.0.1
+SQLAlchemy==1.4.32
+tqdm==4.64.0
