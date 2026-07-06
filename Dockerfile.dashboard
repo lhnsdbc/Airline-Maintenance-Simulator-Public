@@ -14,6 +14,6 @@ RUN python generate_dummy_data.py \
     && python generate_mock_nr_artifact.py \
     && python -m experiments.synthetic_experiment --scenario default_run --seed 20260706
 
-EXPOSE 8000
+EXPOSE 8050
 
-CMD ["sh", "-c", "uvicorn api.app:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["sh", "-c", "python -m dashboard.app --host 0.0.0.0 --port ${PORT:-8050}"]

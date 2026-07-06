@@ -12,19 +12,19 @@ It intentionally does not publish private operational data, derived real-input b
 
 - Synthetic input generators create aircraft, airport, schedule, maintenance policy, and non-routine workload artifacts.
 - Experiment tracking records deterministic policy comparisons across maintenance rungs and non-routine workload modes.
-- The dashboard visualizes KPI differences across policy rungs and reserve/realized non-routine workload alignment.
-- The FastAPI service exposes health, profile, experiment lookup, policy comparison, search, and runtime metrics endpoints.
-- The analyst layer creates deterministic reports and LLM-ready prompt packages from grounded KPI evidence.
-- Retrieval indexes local KPI/profile/report artifacts with metadata filters.
-- Docker and CI package and verify the public synthetic workflow.
+- The dashboard visualizes KPI differences across policy rungs, reserve/realized non-routine workload alignment, grounded analyst reports, and LLM prompt packages.
+- The FastAPI service exposes health, profile, experiment lookup, policy comparison, lexical search, vector RAG search, grounded LLM report, and runtime metrics endpoints.
+- The analyst layer creates deterministic reports, LLM-ready prompt packages, and optional OpenAI/Anthropic-backed summaries from grounded KPI evidence.
+- Retrieval indexes local KPI/profile/report artifacts with metadata filters through lexical search, a local vector index, and an optional Chroma backend.
+- Docker, Render configuration, and CI package and verify the public synthetic workflow.
 
 ## Boundaries
 
 - Synthetic KPI values are workflow examples, not operational findings.
-- The public service is a reproducible local/API workflow, not a live production deployment.
+- The public service is deployable as API and dashboard web services, but it is not presented as a high-traffic production system.
 - The project does not claim high-traffic operations, Kubernetes ownership, or production incident response.
 - Any optional LLM use must preserve the evidence boundary: outputs should only restate facts present in the generated evidence package.
 
 ## Suggested Technical Summary
 
-Public synthetic aircraft maintenance simulation and policy-evaluation platform with reproducible experiment tracking, dashboarding, FastAPI endpoints, Docker/CI packaging, grounded KPI reporting, local retrieval, and runtime monitoring.
+Public synthetic aircraft maintenance simulation and policy-evaluation platform with reproducible experiment tracking, MLflow-ready artifacts, dashboarding, FastAPI endpoints, Docker/Render packaging, RAG over generated evidence, grounded LLM reporting, and runtime monitoring.

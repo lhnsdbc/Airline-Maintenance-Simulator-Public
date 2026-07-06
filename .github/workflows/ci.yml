@@ -60,7 +60,9 @@ jobs:
         run: |
           ! grep -RInE "KLM|Air France|real_777|raw KLM|OneDrive|FlightLegs_KLM|maintenance_slots_2022|from2018|PH-B|Schiphol|SYN-MRI|_MRI|11-KLM" \
             --exclude-dir=.git \
+            --exclude-dir=.github \
             --exclude-dir=Data \
             --exclude-dir=artifacts \
             --exclude=DATA_NOTICE.md \
+            --exclude=PUBLICATION_CHECKLIST.md \
             .

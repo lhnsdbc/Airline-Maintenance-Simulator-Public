@@ -1,6 +1,14 @@
+import argparse
+import json
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
-from experiments.synthetic_experiment import compute_metrics
+from experiments.synthetic_experiment import compute_metrics, run_experiment
+
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+FIXTURES_AVAILABLE = (REPO_ROOT / "Data" / "input" / "Scenarios_simulation.csv").exists()
 
 
 class SyntheticExperimentTests(unittest.TestCase):
@@ -34,6 +42,20 @@ class SyntheticExperimentTests(unittest.TestCase):
             predicted["nr_uncovered_labor_hours"],
             static["nr_uncovered_labor_hours"],
         )
+
+    @unittest.skipUnless(FIXTURES_AVAILABLE, "synthetic fixtures are not generated")
+    def test_run_experiment_writes_mlflow_manifest(self):
+        with TemporaryDirectory() as tmp:
+            summary_dir = run_experiment(argparse.Namespace(
+                scenario="default_run",
+                seed=20260706,
+                output_dir=tmp,
+            ))
+            manifest = json.loads((summary_dir / "mlflow_manifest.json").read_text(encoding="utf-8"))
+
+        self.assertEqual(manifest["experiment_name"], "synthetic-policy-comparison")
+        self.assertEqual(manifest["params"]["tracking_scope"], "comparison_summary")
+        self.assertEqual(manifest["metrics"]["run_count"], 6)
 
 
 if __name__ == "__main__":

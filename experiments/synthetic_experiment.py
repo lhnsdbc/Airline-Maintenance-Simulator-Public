@@ -183,6 +183,7 @@ def run_experiment(args: argparse.Namespace) -> Path:
     revision = _git_revision()
     recorder = ExperimentRecorder(output_dir)
     comparison_rows: List[Dict[str, object]] = []
+    run_artifact_dirs: List[Path] = []
 
     for rung in RUNG_FACTORS:
         for nr_mode in NR_MODES:
@@ -198,6 +199,7 @@ def run_experiment(args: argparse.Namespace) -> Path:
             }
             metrics = compute_metrics(profile, rung, nr_mode, args.seed)
             run_path = recorder.write_record(run_id, params=params, metrics=metrics, artifacts={})
+            run_artifact_dirs.append(run_path)
             comparison_rows.append({"run_id": run_id, "rung": rung, "nr_mode": nr_mode, **metrics})
             try_log_mlflow(
                 experiment_name="synthetic-policy-comparison",
@@ -212,6 +214,43 @@ def run_experiment(args: argparse.Namespace) -> Path:
     _write_csv(summary_dir / "kpis.csv", comparison_rows)
     write_json(summary_dir / "synthetic_profile.json", profile)
     (summary_dir / "summary.md").write_text(_summary_markdown(profile, comparison_rows), encoding="utf-8")
+    best = max(comparison_rows, key=lambda row: float(row["policy_quality_score"]))
+    summary_metrics = {
+        "best_policy_quality_score": best["policy_quality_score"],
+        "best_departure_delay": min(float(row["flights_delay_dep"]) for row in comparison_rows),
+        "best_uncovered_nr_labor_hours": min(float(row["nr_uncovered_labor_hours"]) for row in comparison_rows),
+        "run_count": len(comparison_rows),
+    }
+    summary_params = {
+        "scenario_id": args.scenario,
+        "random_seed": args.seed,
+        "simulator_version": revision,
+        "best_policy_rung": best["rung"],
+        "best_nr_mode": best["nr_mode"],
+        "tracking_scope": "comparison_summary",
+    }
+    summary_artifacts = [
+        summary_dir / "kpis.csv",
+        summary_dir / "synthetic_profile.json",
+        summary_dir / "summary.md",
+    ]
+    summary_logged_to_mlflow = try_log_mlflow(
+        experiment_name="synthetic-policy-comparison",
+        run_name=summary_dir.name,
+        params=summary_params,
+        metrics=summary_metrics,
+        artifact_paths=summary_artifacts,
+    )
+    write_json(summary_dir / "mlflow_manifest.json", {
+        "experiment_name": "synthetic-policy-comparison",
+        "comparison_id": summary_dir.name,
+        "mlflow_logged": summary_logged_to_mlflow,
+        "install_extra": "pip install -r requirements-mlops.txt",
+        "params": summary_params,
+        "metrics": summary_metrics,
+        "run_artifact_dirs": [str(path) for path in run_artifact_dirs],
+        "summary_artifacts": [str(path) for path in summary_artifacts],
+    })
     return summary_dir
 
 

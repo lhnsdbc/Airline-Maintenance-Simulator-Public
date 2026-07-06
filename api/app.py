@@ -12,8 +12,10 @@ from typing import Any, Dict, List, Optional
 from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel, Field
 
+from analyst.live_llm import generate_grounded_llm_report
 from experiments.synthetic_experiment import load_profile, run_experiment
 from retrieval.search import search_artifacts
+from retrieval.vector import DEFAULT_VECTOR_DIR, vector_search
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -38,6 +40,20 @@ class SearchResponse(BaseModel):
     results: List[Dict[str, Any]]
 
 
+class LlmReportRequest(BaseModel):
+    provider: str = Field(default="deterministic", pattern="^(auto|deterministic|openai|anthropic)$")
+
+
+class LlmReportResponse(BaseModel):
+    comparison_id: str
+    provider: str
+    model: str
+    used_live_provider: bool
+    report_path: str
+    metadata_path: str
+    text: str
+
+
 class RuntimeMetrics:
     def __init__(self) -> None:
         self.started_at = time.time()
@@ -45,6 +61,7 @@ class RuntimeMetrics:
         self.failed_request_count = 0
         self.generated_comparison_count = 0
         self.search_count = 0
+        self.llm_report_count = 0
         self.total_latency_seconds = 0.0
 
     def record(self, latency_seconds: float, failed: bool) -> None:
@@ -65,6 +82,7 @@ class RuntimeMetrics:
             "failed_request_count": self.failed_request_count,
             "generated_comparison_count": self.generated_comparison_count,
             "search_count": self.search_count,
+            "llm_report_count": self.llm_report_count,
             "average_latency_seconds": round(avg_latency, 6),
             "artifact_comparison_count": len(_comparison_dirs()),
         }
@@ -202,6 +220,67 @@ def create_app() -> FastAPI:
         )
         runtime_metrics.search_count += 1
         return SearchResponse(query=q, count=len(results), results=results)
+
+    @app.get("/rag/search", response_model=SearchResponse)
+    def rag_search(
+        q: str,
+        backend: str = "local",
+        comparison_id: Optional[str] = None,
+        rung: Optional[str] = None,
+        nr_mode: Optional[str] = None,
+        kind: Optional[str] = None,
+        limit: int = 5,
+    ) -> SearchResponse:
+        if limit < 1 or limit > 50:
+            raise HTTPException(status_code=422, detail="limit must be between 1 and 50")
+        try:
+            results = vector_search(
+                q,
+                artifact_dir=ARTIFACT_DIR,
+                report_dir=REPO_ROOT / "reports",
+                index_dir=DEFAULT_VECTOR_DIR,
+                backend=backend,
+                comparison_id=comparison_id,
+                rung=rung,
+                nr_mode=nr_mode,
+                kind=kind,
+                limit=limit,
+            )
+        except RuntimeError as exc:
+            raise HTTPException(status_code=503, detail=str(exc))
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc))
+        runtime_metrics.search_count += 1
+        return SearchResponse(query=q, count=len(results), results=results)
+
+    @app.post("/experiments/{comparison_id}/llm-report", response_model=LlmReportResponse)
+    def llm_report(comparison_id: str, request: LlmReportRequest) -> LlmReportResponse:
+        comparison_path = ARTIFACT_DIR / comparison_id
+        if not comparison_path.resolve().is_relative_to(ARTIFACT_DIR.resolve()):
+            raise HTTPException(status_code=400, detail="Invalid comparison id")
+        if not comparison_path.exists():
+            raise HTTPException(status_code=404, detail="comparison not found")
+        try:
+            result = generate_grounded_llm_report(
+                comparison_id,
+                provider=request.provider,
+                artifact_dir=ARTIFACT_DIR,
+                report_dir=REPO_ROOT / "reports",
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc))
+        except FileNotFoundError as exc:
+            raise HTTPException(status_code=404, detail=str(exc))
+        runtime_metrics.llm_report_count += 1
+        return LlmReportResponse(
+            comparison_id=comparison_id,
+            provider=result.provider,
+            model=result.model,
+            used_live_provider=result.used_live_provider,
+            report_path=str(result.output_path),
+            metadata_path=str(result.metadata_path),
+            text=result.text,
+        )
 
     @app.get("/metrics")
     def metrics() -> Dict[str, Any]:

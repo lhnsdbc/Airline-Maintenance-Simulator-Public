@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: maintenance-simulator-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
+
+  - type: web
+    name: maintenance-simulator-dashboard
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile.dashboard
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"

@@ -8,17 +8,17 @@ Public, synthetic-data version of an aircraft maintenance simulation project. Th
 - Baseline and learned maintenance-policy comparison hooks.
 - Synthetic input generation for reproducible local runs.
 - Experiment runner structure for fixed scenarios, seeds, and policy rungs.
-- Experiment tracking, dashboarding, API packaging, CI, grounded reporting, retrieval, and monitoring around synthetic maintenance scenarios.
+- Experiment tracking, dashboarding, API packaging, CI, deployment configuration, grounded LLM reporting, retrieval/RAG, and monitoring around synthetic maintenance scenarios.
 
 ## Project Map
 
 - `generate_dummy_data.py` and `generate_mock_nr_artifact.py`: synthetic fixture generation.
 - `experiments/`: tracked deterministic policy-comparison workflow.
 - `dashboard/`: Dash policy-comparison dashboard.
-- `api/`: FastAPI service for health, profiles, policy comparisons, experiment lookup, search, and metrics.
+- `api/`: FastAPI service for health, profiles, policy comparisons, experiment lookup, search/RAG, LLM reports, and metrics.
 - `analyst/`: grounded stakeholder report generation from KPI artifacts.
-- `retrieval/`: local lexical search over KPI/profile/report artifacts.
-- `docs/`: data notice, roadmap, project positioning, and publication checklist.
+- `retrieval/`: lexical and vector retrieval over KPI/profile/report artifacts.
+- `docs/`: architecture, data notice, roadmap, project positioning, and publication checklist.
 
 ## Data Policy
 
@@ -65,7 +65,14 @@ py -m experiments.synthetic_experiment --scenario default_run --seed 20260706
 
 This writes one reproducible local record per policy rung and NR mode under `artifacts/experiments/`, plus a comparison table and short Markdown summary. Each run record includes scenario ID, seed, simulator revision, policy rung, NR mode, metadata, and KPI proxies.
 
-If `mlflow` is installed, the same run params, metrics, and JSON artifacts are also mirrored to a local MLflow experiment named `synthetic-policy-comparison`. MLflow is optional so the synthetic public workflow remains easy to run.
+If `mlflow` is installed, the same run params, metrics, and JSON artifacts are also mirrored to a local MLflow experiment named `synthetic-policy-comparison`. MLflow is optional so the synthetic public workflow remains easy to run:
+
+```powershell
+pip install -r requirements-mlops.txt
+mlflow ui --backend-store-uri ./mlruns
+```
+
+Each comparison artifact also includes `mlflow_manifest.json`, which lists the tracked params, metrics, artifact paths, and whether MLflow logging happened in the current environment.
 
 ## Dashboard
 
@@ -95,6 +102,8 @@ Key endpoints:
 - `GET /experiments/{comparison_id}/profile`
 - `GET /experiments/{comparison_id}/kpis`
 - `GET /search?q=predicted%20uncovered&nr_mode=predicted`
+- `GET /rag/search?q=predicted%20uncovered&nr_mode=predicted`
+- `POST /experiments/{comparison_id}/llm-report`
 
 The API validates request inputs with Pydantic and returns experiment IDs, reproducibility metadata, and KPI records from the synthetic tracking artifacts.
 
@@ -108,6 +117,8 @@ docker run --rm -p 8000:8000 aircraft-maintenance-ml-simulator
 ```
 
 The image generates synthetic fixtures and a deterministic comparison artifact during build, then serves the API on port `8000`.
+
+For a public demo, `render.yaml` defines separate Render web services for the API and dashboard. The dashboard uses `Dockerfile.dashboard` and serves port `8050`.
 
 GitHub Actions CI is configured to install the public workflow dependencies, generate synthetic fixtures, run the tracked experiment, execute tests, and scan for private-source terms.
 
@@ -129,12 +140,36 @@ py -m analyst.llm_prompt default_run_comparison_seed20260706
 
 This writes a provider-neutral JSON prompt package under `reports/llm_prompts/`. It contains strict grounding instructions, the KPI records, scenario profile, and the deterministic analyst report. It does not call an external API or require a model key.
 
+Generate an optional live provider-backed report from the same evidence package:
+
+```powershell
+$env:OPENAI_API_KEY = "..."
+py -m analyst.live_llm default_run_comparison_seed20260706 --provider openai
+```
+
+You can also use `--provider anthropic` with `ANTHROPIC_API_KEY`. Without a provider key, the command writes the deterministic grounded report as a fallback, so local tests and CI do not depend on paid services.
+
 ## Retrieval And Monitoring
 
 The API includes dependency-free lexical retrieval over generated KPI/profile/report artifacts:
 
 ```powershell
 Invoke-WebRequest "http://127.0.0.1:8000/search?q=predicted%20uncovered&nr_mode=predicted"
+```
+
+It also includes a vector retrieval path for RAG over simulation evidence:
+
+```powershell
+py -m retrieval.vector build --backend local
+py -m retrieval.vector search "predicted uncovered"
+Invoke-WebRequest "http://127.0.0.1:8000/rag/search?q=predicted%20uncovered&nr_mode=predicted"
+```
+
+For a Chroma-backed vector store, install the optional RAG dependencies and rebuild the index:
+
+```powershell
+pip install -r requirements-rag.txt
+py -m retrieval.vector build --backend chroma
 ```
 
 It also exposes lightweight runtime monitoring at `/metrics`, including request count, failure count, generated comparison count, search count, average latency, and available artifact count.
@@ -145,14 +180,14 @@ It also exposes lightweight runtime monitoring at `/metrics`, including request 
 2. Extend the Dash policy-comparison dashboard with scenario filters and historical run comparisons.
 3. Extend the FastAPI service from synthetic policy comparison to full simulator workflows.
 4. Extend Docker/CI from synthetic service smoke tests to full simulator smoke tests.
-5. Connect the grounded LLM prompt package to an optional live model adapter when a provider key is available.
-6. Extend retrieval from local lexical search to optional vector search.
+5. Extend the optional live LLM adapter with streaming and provider-specific structured-output validation.
+6. Extend vector retrieval evaluation with labeled evidence queries and recall checks.
 7. Extend monitoring from in-process API metrics to Prometheus-compatible export.
 
 ## Project Scope
 
 This repository is a public, synthetic-data implementation of an aircraft maintenance simulation and policy-evaluation workflow. It is suitable for studying software architecture, experiment tracking, service packaging, and stakeholder reporting patterns without exposing private operational data.
 
-See [docs/PROJECT_POSITIONING.md](docs/PROJECT_POSITIONING.md) for scope, architecture notes, and usage boundaries. Before publishing or mirroring the project, run [docs/PUBLICATION_CHECKLIST.md](docs/PUBLICATION_CHECKLIST.md).
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/PROJECT_POSITIONING.md](docs/PROJECT_POSITIONING.md) for scope, architecture notes, and usage boundaries. Before publishing or mirroring the project, run [docs/PUBLICATION_CHECKLIST.md](docs/PUBLICATION_CHECKLIST.md).
 
 Avoid presenting synthetic KPI values as real operational results.

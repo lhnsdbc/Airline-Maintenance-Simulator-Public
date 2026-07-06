@@ -9,7 +9,7 @@ Run this checklist before pushing the repository to a public remote.
 - Run the sensitive-term scan:
 
 ```powershell
-rg -n -S "KLM|Air France|real_777|raw KLM|OneDrive|FlightLegs_KLM|maintenance_slots_2022|from2018|PH-B|Schiphol|SYN-MRI|_MRI|11-KLM" -g "!docs/DATA_NOTICE.md" -g "!Data/**" -g "!artifacts/**" -g "!reports/**"
+rg -n -S "<private-source-term-pattern>" -g "!docs/DATA_NOTICE.md" -g "!docs/PUBLICATION_CHECKLIST.md" -g "!Data/**" -g "!artifacts/**" -g "!reports/**"
 ```
 
 Expected result: no matches.
@@ -21,6 +21,9 @@ py generate_dummy_data.py
 py generate_mock_nr_artifact.py
 py -m experiments.synthetic_experiment --scenario default_run --seed 20260706
 py -m analyst.experiment_report default_run_comparison_seed20260706
+py -m analyst.live_llm default_run_comparison_seed20260706 --provider deterministic
+py -m retrieval.vector build --backend local
+py -m retrieval.vector search "predicted uncovered"
 py -m unittest discover -s tests -v
 ```
 
@@ -35,6 +38,7 @@ Then open:
 - `http://127.0.0.1:8000/health`
 - `http://127.0.0.1:8000/metrics`
 - `http://127.0.0.1:8000/search?q=predicted%20uncovered`
+- `http://127.0.0.1:8000/rag/search?q=predicted%20uncovered`
 
 ## Git Identity
 

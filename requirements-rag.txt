@@ -1,0 +1,2 @@
+-r requirements-service.txt
+chromadb>=1.0,<2.0
