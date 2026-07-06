@@ -164,10 +164,10 @@ def _summary_markdown(profile: Mapping[str, object], rows: List[Mapping[str, obj
             f"{profile['airport_count']} airports, {profile['rotation_count']} rotations, "
             f"and {profile['flight_leg_count']} flight legs.",
             "",
-            f"Best proxy policy in this deterministic demo: `{best['rung']}` with "
+            f"Best proxy policy in this deterministic workflow: `{best['rung']}` with "
             f"`{best['nr_mode']}` NR mode, quality score {best['policy_quality_score']}.",
             "",
-            "This is a synthetic portfolio experiment. It demonstrates run tracking and "
+            "This is a synthetic validation experiment. It demonstrates run tracking and "
             "policy-comparison plumbing; it is not evidence about a real airline operation.",
             "",
         ]
@@ -216,7 +216,7 @@ def run_experiment(args: argparse.Namespace) -> Path:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Run tracked synthetic policy-comparison demo.")
+    parser = argparse.ArgumentParser(description="Run tracked synthetic policy-comparison workflow.")
     parser.add_argument("--scenario", default="default_run")
     parser.add_argument("--seed", type=int, default=20260706)
     parser.add_argument("--output-dir", default="artifacts/experiments")

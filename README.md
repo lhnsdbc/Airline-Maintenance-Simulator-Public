@@ -1,6 +1,6 @@
 # Aircraft Maintenance ML Simulator
 
-Public, synthetic-data version of an aircraft maintenance simulation project. The goal is to demonstrate production-style simulation, policy evaluation, and ML decision-support workflows without publishing any private airline data.
+Public, synthetic-data version of an aircraft maintenance simulation project. The repository provides reproducible simulation fixtures, policy evaluation tooling, and service interfaces without publishing any private airline data.
 
 ## What This Project Shows
 
@@ -8,7 +8,7 @@ Public, synthetic-data version of an aircraft maintenance simulation project. Th
 - Baseline and learned maintenance-policy comparison hooks.
 - Synthetic input generation for reproducible local runs.
 - Experiment runner structure for fixed scenarios, seeds, and policy rungs.
-- Experiment tracking, dashboarding, API packaging, CI, grounded reporting, retrieval, and monitoring around a public synthetic workflow.
+- Experiment tracking, dashboarding, API packaging, CI, grounded reporting, retrieval, and monitoring around synthetic maintenance scenarios.
 
 ## Project Map
 
@@ -18,7 +18,7 @@ Public, synthetic-data version of an aircraft maintenance simulation project. Th
 - `api/`: FastAPI service for health, profiles, policy comparisons, experiment lookup, search, and metrics.
 - `analyst/`: grounded stakeholder report generation from KPI artifacts.
 - `retrieval/`: local lexical search over KPI/profile/report artifacts.
-- `docs/`: data notice, roadmap, CV positioning, and publication checklist.
+- `docs/`: data notice, roadmap, project positioning, and publication checklist.
 
 ## Data Policy
 
@@ -149,12 +149,10 @@ It also exposes lightweight runtime monitoring at `/metrics`, including request 
 6. Extend retrieval from local lexical search to optional vector search.
 7. Extend monitoring from in-process API metrics to Prometheus-compatible export.
 
-## Portfolio Positioning
+## Project Scope
 
-This repo is intended to support a CV claim like:
+This repository is a public, synthetic-data implementation of an aircraft maintenance simulation and policy-evaluation workflow. It is suitable for studying software architecture, experiment tracking, service packaging, and stakeholder reporting patterns without exposing private operational data.
 
-> Built a public aircraft maintenance simulation platform using synthetic operational data, with reproducible experiment tracking, policy comparison workflows, API-ready simulation structure, and a roadmap toward production-style ML evaluation.
+See [docs/PROJECT_POSITIONING.md](docs/PROJECT_POSITIONING.md) for scope, architecture notes, and usage boundaries. Before publishing or mirroring the project, run [docs/PUBLICATION_CHECKLIST.md](docs/PUBLICATION_CHECKLIST.md).
 
-See [docs/CV_POSITIONING.md](docs/CV_POSITIONING.md) for safe CV bullets and interview talking points. Before publishing, run [docs/PUBLICATION_CHECKLIST.md](docs/PUBLICATION_CHECKLIST.md).
-
-Avoid claiming live production deployment, ownership of confidential airline data, or high-traffic service operation from this public version.
+Avoid presenting synthetic KPI values as real operational results.

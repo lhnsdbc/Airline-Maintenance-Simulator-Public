@@ -2,7 +2,7 @@
 
 The recorder always writes local JSON/CSV/Markdown artifacts. If MLflow is installed,
 callers can additionally mirror params and metrics to a local MLflow run without making
-MLflow mandatory for the lightweight portfolio demo.
+MLflow mandatory for the lightweight public workflow.
 """
 
 from __future__ import annotations
@@ -70,7 +70,7 @@ def try_log_mlflow(
     """Mirror a local record to MLflow when MLflow is available.
 
     Returns True if MLflow logging happened, otherwise False. The public workflow stays
-    usable without MLflow so contributors can run the synthetic demo after installing
+    usable without MLflow so contributors can run the synthetic workflow after installing
     only the base simulator dependencies.
     """
 

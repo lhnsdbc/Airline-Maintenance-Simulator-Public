@@ -9,8 +9,8 @@
 
 ## Phase 1: Experiment Tracking
 
-- Add local experiment records with optional MLflow mirroring. Done for the synthetic policy-comparison demo.
-- Log scenario ID, seed, simulator version, policy rung, policy mode, KPIs, and artifacts. Done for the synthetic policy-comparison demo.
+- Add local experiment records with optional MLflow mirroring. Done for the synthetic policy-comparison workflow.
+- Log scenario ID, seed, simulator version, policy rung, policy mode, KPIs, and artifacts. Done for the synthetic policy-comparison workflow.
 - Add a fixed-seed reproducibility check. Done for the synthetic KPI function.
 - Next: wire the same recorder into full simulator runs once solver-dependent workflows are stable on the public synthetic profile.
 
@@ -47,4 +47,4 @@
 - Index synthetic experiment summaries and failure cases. Done for KPI rows, synthetic profiles, and grounded analyst reports.
 - Add metadata filters for scenario, policy, date, and metric type. Partly done: comparison ID, rung, NR mode, and artifact kind filters are available.
 - Expose lightweight request/runtime metrics and structured logs. Done for in-process API metrics at `/metrics`; structured logs remain a future extension.
-- Next: add optional vector search and Prometheus-compatible metrics export if needed for a deployment-oriented demo.
+- Next: add optional vector search and Prometheus-compatible metrics export if needed for deployment-oriented evaluation.
