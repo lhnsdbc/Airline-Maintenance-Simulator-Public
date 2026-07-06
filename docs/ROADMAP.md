@@ -16,9 +16,10 @@
 
 ## Phase 2: Policy Dashboard
 
-- Add a Streamlit app.
-- Show policy KPI tables, distributions, failure cases, and scenario sensitivity.
-- Use local MLflow runs or exported CSV summaries as the data source.
+- Add a dashboard app. Done with Dash using the existing dependency set.
+- Show policy KPI tables, distributions, failure cases, and scenario sensitivity. Partly done: policy KPI table, primary KPI chart, and NR reserve/realized chart are in place.
+- Use local MLflow runs or exported CSV summaries as the data source. Done for exported synthetic tracking CSV summaries.
+- Next: add scenario filters and richer failure-case drilldowns once more tracked runs exist.
 
 ## Phase 3: API Service
 

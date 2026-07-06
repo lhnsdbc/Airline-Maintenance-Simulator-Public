@@ -57,10 +57,20 @@ This writes one reproducible local record per policy rung and NR mode under `art
 
 If `mlflow` is installed, the same run params, metrics, and JSON artifacts are also mirrored to a local MLflow experiment named `synthetic-policy-comparison`. MLflow is optional so the synthetic public workflow remains easy to run.
 
+## Dashboard
+
+After creating experiment artifacts, open the policy-comparison dashboard:
+
+```powershell
+py -m dashboard.app --port 8050
+```
+
+Then visit `http://127.0.0.1:8050`. The dashboard reads `artifacts/experiments/*/kpis.csv`, compares policy rungs and NR modes, and highlights delay, uncovered NR labour, interval spillage, and overall proxy quality.
+
 ## Roadmap
 
 1. Extend the local/optional-MLflow experiment tracker to full simulator runs.
-2. Build a Streamlit dashboard for policy comparison across scenarios.
+2. Extend the Dash policy-comparison dashboard with scenario filters and historical run comparisons.
 3. Wrap simulator workflows with FastAPI endpoints.
 4. Add Docker packaging and CI smoke tests.
 5. Add grounded LLM experiment summaries over run metadata and KPI tables.
