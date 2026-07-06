@@ -31,8 +31,8 @@ QUANTILE_LEVELS = [0.05, 0.10, 0.25, 0.50, 0.75, 0.90, 0.95]
 
 # Mirror anemos' NR filtering (M.MAX_DURATION_NR) without importing the heavy config.
 MAX_DURATION_NR = 50.0
-# Number of synthetic routine-task codes to emit per fleet. The fleet-default row is added on top.
-N_MOCK_RT_CODES = 403
+# Number of synthetic routine-task codes to emit per fleet if no maintenance-policy file exists.
+N_MOCK_TASK_CODES = 403
 # Reproducibility for the mock artifact.
 MOCK_SEED = 20240607
 
@@ -64,7 +64,18 @@ def _lognormal_quantiles(mean, cv):
     return np.exp(mu + sigma * norm.ppf(QUANTILE_LEVELS))
 
 
-def build_artifact(distributions_NR, source='mock'):
+def _load_public_task_codes(repo_root):
+    policy_path = os.path.join(repo_root, 'Data', 'input', 'sac_gnn', 'Maintenance policy data.csv')
+    if not os.path.exists(policy_path):
+        return [f'ANON-TASK-{i:04d}' for i in range(1, N_MOCK_TASK_CODES + 1)]
+    df = pd.read_csv(policy_path)
+    if 'Task_code' not in df.columns:
+        return [f'ANON-TASK-{i:04d}' for i in range(1, N_MOCK_TASK_CODES + 1)]
+    codes = [str(code).strip() for code in df['Task_code'].dropna().tolist()]
+    return [code for code in codes if code]
+
+
+def build_artifact(distributions_NR, source='mock', task_codes=None):
     """Build the (conditional_df, calibration_dict) pair from a list of per-fleet NR
     distribution dicts (the structure anemos loads from Data/pickle/distributions_NR)."""
     rng = np.random.default_rng(MOCK_SEED)
@@ -90,12 +101,15 @@ def build_artifact(distributions_NR, source='mock'):
         p_nr = float(fleet_dict.get('probability_NR', 0.3))
         static_mean = _static_mean_per_occurrence(fleet_dict['labor_fitted'].model)
 
-        # Synthesize per-rt_code conditional means with spread so NR placement varies by
-        # routine task (the "conditional, feature-driven" signal). Means are drawn around
+        codes = list(task_codes) if task_codes else [f'ANON-TASK-{i:04d}' for i in range(1, N_MOCK_TASK_CODES + 1)]
+        n_codes = len(codes)
+
+        # Synthesize per-task conditional means with spread so NR placement varies by
+        # anonymized routine task. Means are drawn around
         # static_mean; we then calibrate so their q50 average lands back on static_mean.
-        code_means = static_mean * rng.lognormal(mean=0.0, sigma=0.45, size=N_MOCK_RT_CODES)
-        code_cvs = rng.uniform(0.5, 1.1, size=N_MOCK_RT_CODES)
-        code_pnr = np.clip(p_nr * rng.uniform(0.6, 1.4, size=N_MOCK_RT_CODES), 0.01, 0.99)
+        code_means = static_mean * rng.lognormal(mean=0.0, sigma=0.45, size=n_codes)
+        code_cvs = rng.uniform(0.5, 1.1, size=n_codes)
+        code_pnr = np.clip(p_nr * rng.uniform(0.6, 1.4, size=n_codes), 0.01, 0.99)
 
         raw_q = np.array([_lognormal_quantiles(m, cv) for m, cv in zip(code_means, code_cvs)])
         # Calibrate: scale so the unweighted mean of code medians (q50) == static_mean.
@@ -104,8 +118,8 @@ def build_artifact(distributions_NR, source='mock'):
         scale = static_mean / mean_median if mean_median > 0 else 1.0
         cal_q = raw_q * scale
 
-        for i in range(N_MOCK_RT_CODES):
-            row = {'fleet': fleet, 'rt_code': f'{fleet}_MRI{i:03d}', 'p_nr': round(float(code_pnr[i]), 4)}
+        for i, code in enumerate(codes):
+            row = {'fleet': fleet, 'rt_code': code, 'p_nr': round(float(code_pnr[i]), 4)}
             row.update({c: round(float(cal_q[i, j]), 4) for j, c in enumerate(QUANTILE_COLUMNS)})
             rows.append(row)
 
@@ -130,7 +144,7 @@ def build_artifact(distributions_NR, source='mock'):
             'calibration_scale_applied': round(float(scale), 6),
             'mean_code_p_nr': round(mean_code_p_nr, 6),
             'prob_scale': round(float(prob_scale), 6),
-            'n_rt_codes': N_MOCK_RT_CODES,
+            'n_rt_codes': n_codes,
             'runtime_scale': 1.0,   # adjusted by the calibration guard if residual mass drifts
         }
 
@@ -152,7 +166,8 @@ def main():
     with open(pickle_path, 'rb') as f:
         distributions_NR = pickle.load(f)
 
-    conditional_df, calibration = build_artifact(distributions_NR, source='mock')
+    task_codes = _load_public_task_codes(repo_root)
+    conditional_df, calibration = build_artifact(distributions_NR, source='mock', task_codes=task_codes)
 
     csv_path = os.path.join(out_dir, 'nr_conditional.csv')
     json_path = os.path.join(out_dir, 'nr_calibration.json')

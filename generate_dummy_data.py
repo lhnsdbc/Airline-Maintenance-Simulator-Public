@@ -222,14 +222,14 @@ with open('Data/input/schedules/schedule_2023-01-01_1weeks', 'wb') as f:
 # 3b. Synthetic maintenance policy data
 # ==========================================
 
-task_codes = [f'SYN-MRI-{i:04d}' for i in range(1, MAINTENANCE_TASK_COUNT + 1)]
+task_codes = [f'ANON-TASK-{i:04d}' for i in range(1, MAINTENANCE_TASK_COUNT + 1)]
 intervals = RNG.choice([94, 125, 188, 250, 300, 375, 438, 563, 750, 1125, 16667],
                        size=MAINTENANCE_TASK_COUNT,
                        p=[0.12, 0.08, 0.14, 0.10, 0.16, 0.12, 0.08, 0.08, 0.05, 0.04, 0.03])
 labor = np.round(RNG.lognormal(mean=0.0, sigma=0.75, size=MAINTENANCE_TASK_COUNT), 2)
 labor = np.clip(labor, 0.08, 12.84)
-skills = RNG.choice(['SYN_A', 'SYN_B', 'SYN_C', 'SYN_D', 'SYN_E'], size=MAINTENANCE_TASK_COUNT)
-panels = RNG.choice(['0'] + [f'P{i:03d}' for i in range(1, 106)], size=MAINTENANCE_TASK_COUNT)
+skills = RNG.choice(['GROUP_A', 'GROUP_B', 'GROUP_C', 'GROUP_D', 'GROUP_E'], size=MAINTENANCE_TASK_COUNT)
+panels = RNG.choice(['NONE'] + [f'AREA{i:03d}' for i in range(1, 106)], size=MAINTENANCE_TASK_COUNT)
 policy_df = pd.DataFrame({
     'Task_code': task_codes,
     'Interval': intervals,
