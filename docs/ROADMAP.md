@@ -36,9 +36,10 @@
 
 ## Phase 5: Grounded LLM Analyst
 
-- Generate short experiment summaries from run metadata and KPI tables.
-- Require citations to scenario IDs, run IDs, metric values, and policy versions.
-- Keep the LLM layer explanatory, not decision-authoritative.
+- Generate short experiment summaries from run metadata and KPI tables. Done as a deterministic grounded analyst report.
+- Require citations to scenario IDs, run IDs, metric values, and policy versions. Done for run IDs and metric values; policy versions are represented by policy rungs/modes in the synthetic workflow.
+- Keep the LLM layer explanatory, not decision-authoritative. Done in the report caveat.
+- Next: add an optional LLM summarization adapter that rewrites only the grounded report facts when an API key is available.
 
 ## Phase 6: Retrieval And Monitoring
 

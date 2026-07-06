@@ -99,13 +99,23 @@ The image generates synthetic fixtures and a deterministic comparison artifact d
 
 GitHub Actions CI is configured to install the public workflow dependencies, generate synthetic fixtures, run the tracked experiment, execute tests, and scan for private-source terms.
 
+## Grounded Analyst Report
+
+Generate a stakeholder-readable report from tracked KPI artifacts:
+
+```powershell
+py -m analyst.experiment_report default_run_comparison_seed20260706
+```
+
+The report cites exact run IDs and metric values from `kpis.csv`, then writes a Markdown report under `reports/`. This is the grounded reporting layer that can later be connected to an LLM summarizer without letting the model invent evidence.
+
 ## Roadmap
 
 1. Extend the local/optional-MLflow experiment tracker to full simulator runs.
 2. Extend the Dash policy-comparison dashboard with scenario filters and historical run comparisons.
 3. Extend the FastAPI service from synthetic policy comparison to full simulator workflows.
 4. Extend Docker/CI from synthetic service smoke tests to full simulator smoke tests.
-5. Add grounded LLM experiment summaries over run metadata and KPI tables.
+5. Connect the grounded analyst report to an optional LLM summarizer over run metadata and KPI tables.
 6. Add retrieval over synthetic experiment logs and reports.
 7. Add lightweight service and policy-quality monitoring.
 
