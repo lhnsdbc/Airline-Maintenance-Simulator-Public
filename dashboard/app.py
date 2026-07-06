@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 
 import pandas as pd
 import plotly.express as px
 from dash import Dash, Input, Output, State, dash_table, dcc, html
+
+from analyst.experiment_report import build_report
+from analyst.llm_prompt import build_prompt_package
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -75,6 +79,22 @@ def _add_marker_size(current: pd.DataFrame) -> pd.DataFrame:
     min_score = current["policy_quality_score"].min()
     current["marker_size_score"] = (current["policy_quality_score"] - min_score + 1).clip(lower=1)
     return current
+
+
+def _build_llm_panel_content(
+    comparison_id: str,
+    kpis: pd.DataFrame,
+    artifact_dir: Path = DEFAULT_ARTIFACT_DIR,
+) -> tuple[str, str]:
+    profile_path = artifact_dir / comparison_id / "synthetic_profile.json"
+    if not profile_path.exists():
+        message = f"Missing scenario profile for `{comparison_id}`."
+        return message, "{}"
+
+    profile = json.loads(profile_path.read_text(encoding="utf-8"))
+    report = build_report(comparison_id, kpis, profile)
+    package = build_prompt_package(comparison_id, report, kpis, profile)
+    return report, json.dumps(package, indent=2, sort_keys=True)
 
 
 def create_app(artifact_dir: Path = DEFAULT_ARTIFACT_DIR) -> Dash:
@@ -154,6 +174,25 @@ def create_app(artifact_dir: Path = DEFAULT_ARTIFACT_DIR) -> Dash:
                     ),
                 ],
                 className="grid",
+            ),
+            html.Div(
+                [
+                    html.Div(
+                        [
+                            html.H2("Grounded Analyst"),
+                            dcc.Markdown(id="analyst-report", className="report-markdown"),
+                        ],
+                        className="panel analyst-panel",
+                    ),
+                    html.Div(
+                        [
+                            html.H2("LLM Prompt Package"),
+                            html.Pre(id="llm-prompt-package", className="prompt-package"),
+                        ],
+                        className="panel analyst-panel",
+                    ),
+                ],
+                className="llm-grid",
             ),
             html.Div(
                 [
@@ -293,6 +332,12 @@ def create_app(artifact_dir: Path = DEFAULT_ARTIFACT_DIR) -> Dash:
                     overflow-wrap: anywhere;
                 }
                 .grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 14px; }
+                .llm-grid {
+                    display: grid;
+                    grid-template-columns: minmax(0, 1fr) minmax(320px, 0.85fr);
+                    gap: 14px;
+                    margin-top: 14px;
+                }
                 .panel { padding: 12px; min-width: 0; }
                 .panel-heading {
                     display: flex;
@@ -312,11 +357,38 @@ def create_app(artifact_dir: Path = DEFAULT_ARTIFACT_DIR) -> Dash:
                     font-size: 13px;
                     text-align: right;
                 }
+                .analyst-panel { padding: 16px; }
+                .analyst-panel h2 { margin: 0 0 12px; font-size: 18px; }
+                .report-markdown {
+                    color: var(--ink);
+                    font-size: 14px;
+                    line-height: 1.5;
+                }
+                .report-markdown h1 { font-size: 20px; margin: 0 0 12px; }
+                .report-markdown h2 { font-size: 15px; margin: 16px 0 8px; }
+                .report-markdown p, .report-markdown ul { margin: 0 0 10px; }
+                .prompt-package {
+                    box-sizing: border-box;
+                    width: 100%;
+                    max-height: 520px;
+                    overflow: auto;
+                    margin: 0;
+                    padding: 12px;
+                    border: 1px solid var(--line);
+                    border-radius: 8px;
+                    background: #f8fafc;
+                    color: #243044;
+                    font-family: "Cascadia Mono", Consolas, monospace;
+                    font-size: 12px;
+                    line-height: 1.45;
+                    white-space: pre-wrap;
+                    overflow-wrap: anywhere;
+                }
                 .table-panel { margin-top: 14px; padding: 16px; }
                 .table-panel h2 { margin: 0 0 12px; font-size: 18px; }
                 @media (max-width: 980px) {
                     .app-shell { padding: 16px; }
-                    .topbar, .grid, .metric-strip { grid-template-columns: 1fr; }
+                    .topbar, .grid, .llm-grid, .metric-strip { grid-template-columns: 1fr; }
                     .panel-heading { display: block; }
                     .panel-heading p { text-align: left; margin-top: 4px; }
                 }
@@ -418,6 +490,23 @@ def create_app(artifact_dir: Path = DEFAULT_ARTIFACT_DIR) -> Dash:
         table = current[table_cols].round(3)
         columns = [{"name": col.replace("_", " ").title(), "id": col} for col in table.columns]
         return cards, chart, nr_chart, table.to_dict("records"), columns
+
+    @app.callback(
+        Output("analyst-report", "children"),
+        Output("llm-prompt-package", "children"),
+        Input("comparison-select", "value"),
+        Input("comparison-data", "data"),
+    )
+    def update_llm_panel(comparison_id, records):
+        current = pd.DataFrame(records)
+        if current.empty or comparison_id is None:
+            return "Run `py -m experiments.synthetic_experiment` to create artifacts.", "{}"
+
+        current = current[current["comparison_id"] == comparison_id].copy()
+        if current.empty:
+            return "No rows found for selected comparison.", "{}"
+
+        return _build_llm_panel_content(comparison_id, current, artifact_dir)
 
     return app
 

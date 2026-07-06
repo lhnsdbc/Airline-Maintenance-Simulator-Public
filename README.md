@@ -75,7 +75,7 @@ After creating experiment artifacts, open the policy-comparison dashboard:
 py -m dashboard.app --port 8050
 ```
 
-Then visit `http://127.0.0.1:8050`. The dashboard reads `artifacts/experiments/*/kpis.csv`, compares policy rungs and NR modes, and highlights delay, uncovered NR labour, interval spillage, and overall proxy quality.
+Then visit `http://127.0.0.1:8050`. The dashboard reads `artifacts/experiments/*/kpis.csv`, compares policy rungs and NR modes, highlights delay, uncovered NR labour, interval spillage, and overall proxy quality, and shows the grounded analyst report plus LLM prompt package for the selected experiment.
 
 ## API Service
 

@@ -1,10 +1,11 @@
 import unittest
+import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import pandas as pd
 
-from dashboard.app import _add_marker_size, load_comparisons
+from dashboard.app import _add_marker_size, _build_llm_panel_content, load_comparisons
 
 
 class DashboardTests(unittest.TestCase):
@@ -33,6 +34,40 @@ class DashboardTests(unittest.TestCase):
         sized = _add_marker_size(df)
 
         self.assertTrue((sized["marker_size_score"] > 0).all())
+
+    def test_llm_panel_builds_grounded_report_and_prompt_package(self):
+        with TemporaryDirectory() as tmp:
+            artifact_dir = Path(tmp)
+            comparison_id = "default_run_comparison_seed1"
+            comparison_dir = artifact_dir / comparison_id
+            comparison_dir.mkdir(parents=True)
+            (comparison_dir / "synthetic_profile.json").write_text(
+                json.dumps({
+                    "aircraft_count": 31,
+                    "airport_count": 38,
+                    "rotation_count": 127,
+                    "flight_leg_count": 311,
+                    "duration_days": 7,
+                }),
+                encoding="utf-8",
+            )
+            kpis = pd.DataFrame([{
+                "run_id": "run_a",
+                "rung": "R2",
+                "nr_mode": "predicted",
+                "policy_quality_score": 32.084,
+                "flights_delay_dep": 3528.14,
+                "interval_spillage": 17.82,
+                "nr_uncovered_labor_hours": 0.0,
+                "completion_factor": 0.9874,
+            }])
+
+            report, package_json = _build_llm_panel_content(comparison_id, kpis, artifact_dir)
+
+        package = json.loads(package_json)
+        self.assertIn("Grounded Experiment Analyst Report", report)
+        self.assertIn("Use only the evidence JSON", package["system"])
+        self.assertEqual(package["evidence"]["kpi_records"][0]["run_id"], "run_a")
 
 
 if __name__ == "__main__":
