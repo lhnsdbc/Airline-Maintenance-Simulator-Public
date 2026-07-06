@@ -67,11 +67,30 @@ py -m dashboard.app --port 8050
 
 Then visit `http://127.0.0.1:8050`. The dashboard reads `artifacts/experiments/*/kpis.csv`, compares policy rungs and NR modes, and highlights delay, uncovered NR labour, interval spillage, and overall proxy quality.
 
+## API Service
+
+Run the FastAPI service after installing dependencies and generating synthetic fixtures:
+
+```powershell
+py -m api.app
+```
+
+Key endpoints:
+
+- `GET /health`
+- `GET /profile/default_run`
+- `POST /compare-policies`
+- `GET /experiments`
+- `GET /experiments/{comparison_id}/profile`
+- `GET /experiments/{comparison_id}/kpis`
+
+The API validates request inputs with Pydantic and returns experiment IDs, reproducibility metadata, and KPI records from the synthetic tracking artifacts.
+
 ## Roadmap
 
 1. Extend the local/optional-MLflow experiment tracker to full simulator runs.
 2. Extend the Dash policy-comparison dashboard with scenario filters and historical run comparisons.
-3. Wrap simulator workflows with FastAPI endpoints.
+3. Extend the FastAPI service from synthetic policy comparison to full simulator workflows.
 4. Add Docker packaging and CI smoke tests.
 5. Add grounded LLM experiment summaries over run metadata and KPI tables.
 6. Add retrieval over synthetic experiment logs and reports.

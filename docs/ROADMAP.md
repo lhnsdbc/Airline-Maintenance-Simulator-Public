@@ -23,9 +23,10 @@
 
 ## Phase 3: API Service
 
-- Add FastAPI endpoints for simulation, policy comparison, experiment lookup, and health checks.
-- Validate inputs with Pydantic.
-- Return experiment IDs and reproducibility metadata.
+- Add FastAPI endpoints for simulation, policy comparison, experiment lookup, and health checks. Partly done: health, synthetic profile, synthetic policy comparison, and experiment artifact lookup endpoints are in place.
+- Validate inputs with Pydantic. Done for synthetic policy comparison requests.
+- Return experiment IDs and reproducibility metadata. Done for synthetic comparison artifacts.
+- Next: expose full simulator execution once solver-dependent workflows are stable on the public synthetic profile.
 
 ## Phase 4: Docker And CI
 
