@@ -1,0 +1,63 @@
+name: public-simulator-ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install public workflow dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-service.txt
+
+      - name: Generate synthetic fixtures
+        run: |
+          python generate_dummy_data.py
+          python generate_mock_nr_artifact.py
+
+      - name: Run tracked synthetic experiment
+        run: python -m experiments.synthetic_experiment --scenario default_run --seed 20260706
+
+      - name: Run tests
+        run: python -m unittest discover -s tests -v
+
+      - name: API health check
+        shell: bash
+        run: |
+          uvicorn api.app:app --host 127.0.0.1 --port 8000 &
+          server_pid=$!
+          trap "kill $server_pid" EXIT
+          python - <<'PY'
+          import json
+          import time
+          import urllib.request
+
+          for _ in range(30):
+              try:
+                  with urllib.request.urlopen("http://127.0.0.1:8000/health", timeout=2) as response:
+                      payload = json.loads(response.read().decode("utf-8"))
+                  assert payload["status"] == "ok"
+                  raise SystemExit(0)
+              except Exception:
+                  time.sleep(1)
+          raise SystemExit("API health check did not become ready")
+          PY
+
+      - name: Sensitive-term scan
+        shell: bash
+        run: |
+          ! grep -RInE "KLM|Air France|real_777|raw KLM|OneDrive|FlightLegs_KLM|maintenance_slots_2022|from2018|PH-B|Schiphol|SYN-MRI|_MRI|11-KLM" \
+            --exclude-dir=.git \
+            --exclude-dir=Data \
+            --exclude-dir=artifacts \
+            --exclude=DATA_NOTICE.md \
+            .

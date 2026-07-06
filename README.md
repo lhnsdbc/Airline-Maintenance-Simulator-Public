@@ -86,12 +86,25 @@ Key endpoints:
 
 The API validates request inputs with Pydantic and returns experiment IDs, reproducibility metadata, and KPI records from the synthetic tracking artifacts.
 
+## Docker And CI
+
+The public service has a lightweight dependency set in `requirements-service.txt` for the synthetic API/dashboard workflow. Build and run the API container with:
+
+```powershell
+docker build -t aircraft-maintenance-ml-simulator .
+docker run --rm -p 8000:8000 aircraft-maintenance-ml-simulator
+```
+
+The image generates synthetic fixtures and a deterministic comparison artifact during build, then serves the API on port `8000`.
+
+GitHub Actions CI is configured to install the public workflow dependencies, generate synthetic fixtures, run the tracked experiment, execute tests, and scan for private-source terms.
+
 ## Roadmap
 
 1. Extend the local/optional-MLflow experiment tracker to full simulator runs.
 2. Extend the Dash policy-comparison dashboard with scenario filters and historical run comparisons.
 3. Extend the FastAPI service from synthetic policy comparison to full simulator workflows.
-4. Add Docker packaging and CI smoke tests.
+4. Extend Docker/CI from synthetic service smoke tests to full simulator smoke tests.
 5. Add grounded LLM experiment summaries over run metadata and KPI tables.
 6. Add retrieval over synthetic experiment logs and reports.
 7. Add lightweight service and policy-quality monitoring.

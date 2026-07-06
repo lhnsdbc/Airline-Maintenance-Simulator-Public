@@ -1,4 +1,3 @@
-# File: klm87728-anemos/data_import/mock_classes.py
 from scipy import stats
 import numpy as np
 class MockDistFit:

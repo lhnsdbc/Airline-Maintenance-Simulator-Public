@@ -30,8 +30,9 @@
 
 ## Phase 4: Docker And CI
 
-- Add a Dockerfile for the API service.
-- Add CI for unit tests, synthetic-data generation, smoke simulation, and API health checks.
+- Add a Dockerfile for the API service. Done for the public synthetic FastAPI service.
+- Add CI for unit tests, synthetic-data generation, smoke simulation, and API health checks. Done for the public synthetic workflow.
+- Next: add a live API health-check step in CI after dependency installation and extend smoke coverage to full simulator execution when solver-dependent workflows are stable.
 
 ## Phase 5: Grounded LLM Analyst
 
