@@ -4,7 +4,7 @@ from tempfile import TemporaryDirectory
 
 import pandas as pd
 
-from dashboard.app import load_comparisons
+from dashboard.app import _add_marker_size, load_comparisons
 
 
 class DashboardTests(unittest.TestCase):
@@ -26,6 +26,13 @@ class DashboardTests(unittest.TestCase):
 
         self.assertEqual(len(df), 1)
         self.assertEqual(df.iloc[0]["comparison_id"], "default_run_comparison_seed1")
+
+    def test_marker_size_is_positive_when_quality_score_is_negative(self):
+        df = pd.DataFrame({"policy_quality_score": [-5.998, 12.557]})
+
+        sized = _add_marker_size(df)
+
+        self.assertTrue((sized["marker_size_score"] > 0).all())
 
 
 if __name__ == "__main__":

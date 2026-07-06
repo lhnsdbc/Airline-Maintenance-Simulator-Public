@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pandas as pd
 import plotly.express as px
-from dash import Dash, Input, Output, dash_table, dcc, html
+from dash import Dash, Input, Output, State, dash_table, dcc, html
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -66,6 +66,17 @@ def _metric_card(title: str, value: str, detail: str):
     )
 
 
+def _comparison_options(comparisons: list[str]) -> list[dict[str, str]]:
+    return [{"label": item, "value": item} for item in comparisons]
+
+
+def _add_marker_size(current: pd.DataFrame) -> pd.DataFrame:
+    current = current.copy()
+    min_score = current["policy_quality_score"].min()
+    current["marker_size_score"] = (current["policy_quality_score"] - min_score + 1).clip(lower=1)
+    return current
+
+
 def create_app(artifact_dir: Path = DEFAULT_ARTIFACT_DIR) -> Dash:
     app = Dash(__name__)
     df = load_comparisons(artifact_dir)
@@ -81,6 +92,7 @@ def create_app(artifact_dir: Path = DEFAULT_ARTIFACT_DIR) -> Dash:
                             html.Div("Synthetic Portfolio Evidence", className="eyebrow"),
                             html.H1("Maintenance Policy Evaluation"),
                             html.P("Policy rungs, non-routine workload signals, and tracked KPI artifacts."),
+                            html.Div(id="refresh-status", className="refresh-status"),
                         ],
                         className="title-block",
                     ),
@@ -89,7 +101,7 @@ def create_app(artifact_dir: Path = DEFAULT_ARTIFACT_DIR) -> Dash:
                             html.Label("Experiment", htmlFor="comparison-select"),
                             dcc.Dropdown(
                                 id="comparison-select",
-                                options=[{"label": item, "value": item} for item in comparisons],
+                                options=_comparison_options(comparisons),
                                 value=default_comparison,
                                 clearable=False,
                             ),
@@ -171,6 +183,7 @@ def create_app(artifact_dir: Path = DEFAULT_ARTIFACT_DIR) -> Dash:
                 className="panel table-panel",
             ),
             dcc.Store(id="comparison-data", data=df.to_dict("records")),
+            dcc.Interval(id="artifact-refresh", interval=5000, n_intervals=0),
         ],
         className="app-shell",
     )
@@ -226,6 +239,7 @@ def create_app(artifact_dir: Path = DEFAULT_ARTIFACT_DIR) -> Dash:
                 }
                 .title-block h1 { margin: 0; font-size: 34px; line-height: 1.05; letter-spacing: 0; }
                 .title-block p { margin: 8px 0 0; color: var(--muted); max-width: 760px; }
+                .refresh-status { margin-top: 8px; min-height: 18px; color: var(--steel); font-size: 12px; }
                 .control label {
                     display: block;
                     font-size: 12px;
@@ -316,6 +330,24 @@ def create_app(artifact_dir: Path = DEFAULT_ARTIFACT_DIR) -> Dash:
     """
 
     @app.callback(
+        Output("comparison-data", "data"),
+        Output("comparison-select", "options"),
+        Output("comparison-select", "value"),
+        Output("refresh-status", "children"),
+        Input("artifact-refresh", "n_intervals"),
+        State("comparison-select", "value"),
+    )
+    def refresh_artifacts(_n_intervals, selected_comparison):
+        fresh = load_comparisons(artifact_dir)
+        if fresh.empty:
+            return [], [], None, "No experiment artifacts loaded yet."
+
+        fresh_comparisons = sorted(fresh["comparison_id"].unique())
+        comparison_id = selected_comparison if selected_comparison in fresh_comparisons else fresh_comparisons[-1]
+        status = f"Loaded {len(fresh)} run rows from {len(fresh_comparisons)} comparison set(s)."
+        return fresh.to_dict("records"), _comparison_options(fresh_comparisons), comparison_id, status
+
+    @app.callback(
         Output("metric-strip", "children"),
         Output("policy-chart", "figure"),
         Output("nr-chart", "figure"),
@@ -335,6 +367,7 @@ def create_app(artifact_dir: Path = DEFAULT_ARTIFACT_DIR) -> Dash:
         if current.empty:
             fig = _empty_figure("No rows found for selected comparison.")
             return [], fig, fig, [], []
+        current = _add_marker_size(current)
 
         best = current.sort_values("policy_quality_score", ascending=False).iloc[0]
         delay_best = current.sort_values("flights_delay_dep", ascending=True).iloc[0]
@@ -362,10 +395,10 @@ def create_app(artifact_dir: Path = DEFAULT_ARTIFACT_DIR) -> Dash:
             current,
             x="nr_reserved_hours",
             y="nr_realized_hours",
-            size="policy_quality_score",
+            size="marker_size_score",
             color="rung",
             symbol="nr_mode",
-            hover_data=["run_id", "nr_uncovered_labor_hours"],
+            hover_data=["run_id", "policy_quality_score", "nr_uncovered_labor_hours"],
             template="plotly_white",
         )
         max_nr = max(current["nr_reserved_hours"].max(), current["nr_realized_hours"].max())
