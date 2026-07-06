@@ -25,10 +25,12 @@ Replace the URLs below with the Render URLs:
 
 ```powershell
 Invoke-RestMethod "https://YOUR-API.onrender.com/health"
+Invoke-RestMethod "https://YOUR-API.onrender.com/"
 Invoke-RestMethod "https://YOUR-API.onrender.com/metrics"
 Invoke-RestMethod "https://YOUR-API.onrender.com/experiments"
 Invoke-RestMethod "https://YOUR-API.onrender.com/rag/search?q=predicted%20uncovered&nr_mode=predicted"
 Invoke-RestMethod -Method Post "https://YOUR-API.onrender.com/experiments/default_run_comparison_seed20260706/llm-report" -ContentType "application/json" -Body '{"provider":"deterministic"}'
+Invoke-RestMethod "https://YOUR-DASHBOARD.onrender.com/health"
 ```
 
 Then open the dashboard URL in a browser and confirm:

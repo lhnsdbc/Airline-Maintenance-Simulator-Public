@@ -103,6 +103,17 @@ def create_app(artifact_dir: Path = DEFAULT_ARTIFACT_DIR) -> Dash:
     comparisons = sorted(df["comparison_id"].unique()) if not df.empty else []
     default_comparison = comparisons[-1] if comparisons else None
 
+    @app.server.get("/health")
+    def health():
+        current = load_comparisons(artifact_dir)
+        comparisons_loaded = sorted(current["comparison_id"].unique()) if not current.empty else []
+        return {
+            "status": "ok",
+            "artifact_dir": str(artifact_dir),
+            "comparison_count": len(comparisons_loaded),
+            "row_count": int(len(current)),
+        }
+
     app.layout = html.Div(
         [
             html.Div(

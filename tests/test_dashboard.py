@@ -5,7 +5,7 @@ from tempfile import TemporaryDirectory
 
 import pandas as pd
 
-from dashboard.app import _add_marker_size, _build_llm_panel_content, load_comparisons
+from dashboard.app import _add_marker_size, _build_llm_panel_content, create_app, load_comparisons
 
 
 class DashboardTests(unittest.TestCase):
@@ -27,6 +27,26 @@ class DashboardTests(unittest.TestCase):
 
         self.assertEqual(len(df), 1)
         self.assertEqual(df.iloc[0]["comparison_id"], "default_run_comparison_seed1")
+
+    def test_health_endpoint_reports_artifact_rows(self):
+        with TemporaryDirectory() as tmp:
+            artifact_dir = Path(tmp)
+            run_dir = artifact_dir / "default_run_comparison_seed1"
+            run_dir.mkdir(parents=True)
+            pd.DataFrame([{
+                "run_id": "demo",
+                "rung": "R0",
+                "nr_mode": "static",
+                "policy_quality_score": 1.0,
+            }]).to_csv(run_dir / "kpis.csv", index=False)
+            app = create_app(artifact_dir)
+
+            response = app.server.test_client().get("/health")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json["status"], "ok")
+        self.assertEqual(response.json["comparison_count"], 1)
+        self.assertEqual(response.json["row_count"], 1)
 
     def test_marker_size_is_positive_when_quality_score_is_negative(self):
         df = pd.DataFrame({"policy_quality_score": [-5.998, 12.557]})

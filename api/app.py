@@ -133,6 +133,20 @@ def create_app() -> FastAPI:
             "artifact_dir": str(ARTIFACT_DIR),
         }
 
+    @app.get("/")
+    def service_index() -> Dict[str, Any]:
+        return {
+            "name": "Aircraft Maintenance ML Simulator API",
+            "scope": "public synthetic-data demo",
+            "docs_url": "/docs",
+            "health_url": "/health",
+            "metrics_url": "/metrics",
+            "experiments_url": "/experiments",
+            "lexical_search_example": "/search?q=predicted%20uncovered&nr_mode=predicted",
+            "rag_search_example": "/rag/search?q=predicted%20uncovered&nr_mode=predicted",
+            "llm_report_example": "/experiments/default_run_comparison_seed20260706/llm-report",
+        }
+
     @app.get("/profile/{scenario}")
     def profile(scenario: str) -> Dict[str, Any]:
         try:

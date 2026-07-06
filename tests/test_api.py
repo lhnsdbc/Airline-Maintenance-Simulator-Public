@@ -18,6 +18,19 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "ok")
 
+    def test_service_index_links_demo_endpoints(self):
+        from fastapi.testclient import TestClient
+
+        from api.app import create_app
+
+        client = TestClient(create_app())
+        response = client.get("/")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["scope"], "public synthetic-data demo")
+        self.assertIn("/rag/search", payload["rag_search_example"])
+
     def test_compare_request_validates_seed(self):
         from fastapi.testclient import TestClient
 
