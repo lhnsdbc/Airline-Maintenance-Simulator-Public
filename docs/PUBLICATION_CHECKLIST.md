@@ -24,6 +24,7 @@ py -m analyst.experiment_report default_run_comparison_seed20260706
 py -m analyst.live_llm default_run_comparison_seed20260706 --provider deterministic
 py -m retrieval.vector build --backend local
 py -m retrieval.vector search "predicted uncovered"
+py scripts/smoke_public_workflow.py
 py -m unittest discover -s tests -v
 ```
 
@@ -39,6 +40,8 @@ Then open:
 - `http://127.0.0.1:8000/metrics`
 - `http://127.0.0.1:8000/search?q=predicted%20uncovered`
 - `http://127.0.0.1:8000/rag/search?q=predicted%20uncovered`
+
+For public deployment, follow [docs/DEPLOYMENT.md](DEPLOYMENT.md) and save the deployed API/dashboard URLs before adding them to a CV.
 
 ## Git Identity
 

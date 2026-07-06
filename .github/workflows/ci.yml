@@ -27,8 +27,17 @@ jobs:
       - name: Run tracked synthetic experiment
         run: python -m experiments.synthetic_experiment --scenario default_run --seed 20260706
 
+      - name: Run public workflow smoke test
+        run: python scripts/smoke_public_workflow.py
+
       - name: Run tests
         run: python -m unittest discover -s tests -v
+
+      - name: Build API container
+        run: docker build -t maintenance-simulator-api .
+
+      - name: Build dashboard container
+        run: docker build -f Dockerfile.dashboard -t maintenance-simulator-dashboard .
 
       - name: API health check
         shell: bash

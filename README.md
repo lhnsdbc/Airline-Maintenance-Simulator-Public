@@ -120,7 +120,9 @@ The image generates synthetic fixtures and a deterministic comparison artifact d
 
 For a public demo, `render.yaml` defines separate Render web services for the API and dashboard. The dashboard uses `Dockerfile.dashboard` and serves port `8050`.
 
-GitHub Actions CI is configured to install the public workflow dependencies, generate synthetic fixtures, run the tracked experiment, execute tests, and scan for private-source terms.
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for the Render runbook, post-deploy checks, optional provider-key setup, and honest CV wording before/after public deployment.
+
+GitHub Actions CI is configured to install the public workflow dependencies, generate synthetic fixtures, run the tracked experiment, run the public workflow smoke script, execute tests, build both Docker images, and scan for private-source terms.
 
 ## Grounded Analyst Report
 
@@ -174,6 +176,12 @@ py -m retrieval.vector build --backend chroma
 
 It also exposes lightweight runtime monitoring at `/metrics`, including request count, failure count, generated comparison count, search count, average latency, and available artifact count.
 
+Run the key-free smoke path used by CI:
+
+```powershell
+py scripts/smoke_public_workflow.py
+```
+
 ## Roadmap
 
 1. Extend the local/optional-MLflow experiment tracker to full simulator runs.
@@ -188,6 +196,6 @@ It also exposes lightweight runtime monitoring at `/metrics`, including request 
 
 This repository is a public, synthetic-data implementation of an aircraft maintenance simulation and policy-evaluation workflow. It is suitable for studying software architecture, experiment tracking, service packaging, and stakeholder reporting patterns without exposing private operational data.
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/PROJECT_POSITIONING.md](docs/PROJECT_POSITIONING.md) for scope, architecture notes, and usage boundaries. Before publishing or mirroring the project, run [docs/PUBLICATION_CHECKLIST.md](docs/PUBLICATION_CHECKLIST.md).
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md), and [docs/PROJECT_POSITIONING.md](docs/PROJECT_POSITIONING.md) for scope, architecture notes, deployment steps, and usage boundaries. Before publishing or mirroring the project, run [docs/PUBLICATION_CHECKLIST.md](docs/PUBLICATION_CHECKLIST.md).
 
 Avoid presenting synthetic KPI values as real operational results.
