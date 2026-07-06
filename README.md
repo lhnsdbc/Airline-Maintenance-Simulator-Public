@@ -8,7 +8,17 @@ Public, synthetic-data version of an aircraft maintenance simulation project. Th
 - Baseline and learned maintenance-policy comparison hooks.
 - Synthetic input generation for reproducible local runs.
 - Experiment runner structure for fixed scenarios, seeds, and policy rungs.
-- A roadmap toward experiment tracking, dashboards, API packaging, CI, and LLM-assisted analysis.
+- Experiment tracking, dashboarding, API packaging, CI, grounded reporting, retrieval, and monitoring around a public synthetic workflow.
+
+## Project Map
+
+- `generate_dummy_data.py` and `generate_mock_nr_artifact.py`: synthetic fixture generation.
+- `experiments/`: tracked deterministic policy-comparison workflow.
+- `dashboard/`: Dash policy-comparison dashboard.
+- `api/`: FastAPI service for health, profiles, policy comparisons, experiment lookup, search, and metrics.
+- `analyst/`: grounded stakeholder report generation from KPI artifacts.
+- `retrieval/`: local lexical search over KPI/profile/report artifacts.
+- `docs/`: data notice, roadmap, CV positioning, and publication checklist.
 
 ## Data Policy
 
@@ -136,5 +146,7 @@ It also exposes lightweight runtime monitoring at `/metrics`, including request 
 This repo is intended to support a CV claim like:
 
 > Built a public aircraft maintenance simulation platform using synthetic operational data, with reproducible experiment tracking, policy comparison workflows, API-ready simulation structure, and a roadmap toward production-style ML evaluation.
+
+See [docs/CV_POSITIONING.md](docs/CV_POSITIONING.md) for safe CV bullets and interview talking points. Before publishing, run [docs/PUBLICATION_CHECKLIST.md](docs/PUBLICATION_CHECKLIST.md).
 
 Avoid claiming live production deployment, ownership of confidential airline data, or high-traffic service operation from this public version.
