@@ -31,9 +31,8 @@ QUANTILE_LEVELS = [0.05, 0.10, 0.25, 0.50, 0.75, 0.90, 0.95]
 
 # Mirror anemos' NR filtering (M.MAX_DURATION_NR) without importing the heavy config.
 MAX_DURATION_NR = 50.0
-# Number of synthetic routine-task codes to emit per fleet (mock only; the real export
-# emits one row per real JIC/RT code). The fleet-default row is added on top.
-N_MOCK_RT_CODES = 12
+# Number of synthetic routine-task codes to emit per fleet. The fleet-default row is added on top.
+N_MOCK_RT_CODES = 403
 # Reproducibility for the mock artifact.
 MOCK_SEED = 20240607
 

@@ -17,8 +17,8 @@ This repository is designed to contain synthetic fixtures only. It intentionally
 Generate local synthetic inputs with:
 
 ```powershell
-python generate_dummy_data.py
-python generate_mock_nr_artifact.py
+py generate_dummy_data.py
+py generate_mock_nr_artifact.py
 ```
 
 The generated files are ignored by Git.
@@ -26,15 +26,24 @@ The generated files are ignored by Git.
 ## Quick Start
 
 ```powershell
-python -m venv .venv
+py -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-python generate_dummy_data.py
-python generate_mock_nr_artifact.py
-python main.py
+py generate_dummy_data.py
+py generate_mock_nr_artifact.py
+py main.py
 ```
 
-Some optimization paths require a solver supported by Pyomo. If a commercial solver is unavailable, use the lightweight mock-data workflow first and keep solver-dependent experiments scoped accordingly.
+The synthetic generator creates a medium-size one-week scenario with synthetic aircraft, airports, rotations, maintenance slots, maintenance-policy rows, and NR prediction artifacts. Some optimization paths require a solver supported by Pyomo. If a commercial solver is unavailable, use the synthetic smoke workflow first and keep solver-dependent experiments scoped accordingly.
+
+The default generated profile is intentionally large enough to exercise realistic code paths:
+
+- 31 synthetic aircraft registrations.
+- 38 synthetic airports.
+- 127 rotations and 311 flight legs in a one-week schedule.
+- 10 maintenance-slot templates.
+- 403 synthetic maintenance-policy rows.
+- 404 conditional NR prediction rows including the fleet fallback.
 
 ## Roadmap
 
