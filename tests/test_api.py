@@ -28,6 +28,18 @@ class ApiTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 422)
 
+    def test_metrics_endpoint_reports_requests(self):
+        from fastapi.testclient import TestClient
+
+        from api.app import create_app
+
+        client = TestClient(create_app())
+        client.get("/health")
+        response = client.get("/metrics")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertGreaterEqual(response.json()["request_count"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -78,11 +78,13 @@ py -m api.app
 Key endpoints:
 
 - `GET /health`
+- `GET /metrics`
 - `GET /profile/default_run`
 - `POST /compare-policies`
 - `GET /experiments`
 - `GET /experiments/{comparison_id}/profile`
 - `GET /experiments/{comparison_id}/kpis`
+- `GET /search?q=predicted%20uncovered&nr_mode=predicted`
 
 The API validates request inputs with Pydantic and returns experiment IDs, reproducibility metadata, and KPI records from the synthetic tracking artifacts.
 
@@ -109,6 +111,16 @@ py -m analyst.experiment_report default_run_comparison_seed20260706
 
 The report cites exact run IDs and metric values from `kpis.csv`, then writes a Markdown report under `reports/`. This is the grounded reporting layer that can later be connected to an LLM summarizer without letting the model invent evidence.
 
+## Retrieval And Monitoring
+
+The API includes dependency-free lexical retrieval over generated KPI/profile/report artifacts:
+
+```powershell
+Invoke-WebRequest "http://127.0.0.1:8000/search?q=predicted%20uncovered&nr_mode=predicted"
+```
+
+It also exposes lightweight runtime monitoring at `/metrics`, including request count, failure count, generated comparison count, search count, average latency, and available artifact count.
+
 ## Roadmap
 
 1. Extend the local/optional-MLflow experiment tracker to full simulator runs.
@@ -116,8 +128,8 @@ The report cites exact run IDs and metric values from `kpis.csv`, then writes a 
 3. Extend the FastAPI service from synthetic policy comparison to full simulator workflows.
 4. Extend Docker/CI from synthetic service smoke tests to full simulator smoke tests.
 5. Connect the grounded analyst report to an optional LLM summarizer over run metadata and KPI tables.
-6. Add retrieval over synthetic experiment logs and reports.
-7. Add lightweight service and policy-quality monitoring.
+6. Extend retrieval from local lexical search to optional vector search.
+7. Extend monitoring from in-process API metrics to Prometheus-compatible export.
 
 ## Portfolio Positioning
 

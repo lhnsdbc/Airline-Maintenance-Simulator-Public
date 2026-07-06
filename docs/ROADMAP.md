@@ -43,6 +43,7 @@
 
 ## Phase 6: Retrieval And Monitoring
 
-- Index synthetic experiment summaries and failure cases.
-- Add metadata filters for scenario, policy, date, and metric type.
-- Expose lightweight request/runtime metrics and structured logs.
+- Index synthetic experiment summaries and failure cases. Done for KPI rows, synthetic profiles, and grounded analyst reports.
+- Add metadata filters for scenario, policy, date, and metric type. Partly done: comparison ID, rung, NR mode, and artifact kind filters are available.
+- Expose lightweight request/runtime metrics and structured logs. Done for in-process API metrics at `/metrics`; structured logs remain a future extension.
+- Next: add optional vector search and Prometheus-compatible metrics export if needed for a deployment-oriented demo.
