@@ -45,9 +45,21 @@ The default generated profile is intentionally large enough to exercise realisti
 - 403 synthetic maintenance-policy rows.
 - 404 conditional NR prediction rows including the fleet fallback.
 
+## Experiment Tracking Demo
+
+Run a deterministic policy-comparison experiment over the generated synthetic profile:
+
+```powershell
+py -m experiments.synthetic_experiment --scenario default_run --seed 20260706
+```
+
+This writes one reproducible local record per policy rung and NR mode under `artifacts/experiments/`, plus a comparison table and short Markdown summary. Each run record includes scenario ID, seed, simulator revision, policy rung, NR mode, metadata, and KPI proxies.
+
+If `mlflow` is installed, the same run params, metrics, and JSON artifacts are also mirrored to a local MLflow experiment named `synthetic-policy-comparison`. MLflow is optional so the synthetic public workflow remains easy to run.
+
 ## Roadmap
 
-1. Add MLflow experiment tracking for simulator runs.
+1. Extend the local/optional-MLflow experiment tracker to full simulator runs.
 2. Build a Streamlit dashboard for policy comparison across scenarios.
 3. Wrap simulator workflows with FastAPI endpoints.
 4. Add Docker packaging and CI smoke tests.

@@ -9,9 +9,10 @@
 
 ## Phase 1: Experiment Tracking
 
-- Add MLflow local tracking.
-- Log scenario ID, seed, simulator version, policy rung, policy mode, KPIs, and artifacts.
-- Add a fixed-seed reproducibility check.
+- Add local experiment records with optional MLflow mirroring. Done for the synthetic policy-comparison demo.
+- Log scenario ID, seed, simulator version, policy rung, policy mode, KPIs, and artifacts. Done for the synthetic policy-comparison demo.
+- Add a fixed-seed reproducibility check. Done for the synthetic KPI function.
+- Next: wire the same recorder into full simulator runs once solver-dependent workflows are stable on the public synthetic profile.
 
 ## Phase 2: Policy Dashboard
 
