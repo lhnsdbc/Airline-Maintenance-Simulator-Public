@@ -3,6 +3,7 @@
 __pycache__/
 .venv/
 .venv1/
+.venv*/
 .idea/
 
 # Generated simulator data and outputs.

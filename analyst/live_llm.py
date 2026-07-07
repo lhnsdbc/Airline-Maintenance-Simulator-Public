@@ -23,6 +23,7 @@ from experiments.tracking import write_json
 DEFAULT_LLM_OUTPUT_DIR = Path(__file__).resolve().parents[1] / "reports" / "llm_outputs"
 OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses"
 ANTHROPIC_MESSAGES_URL = "https://api.anthropic.com/v1/messages"
+GEMINI_GENERATE_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
 
 @dataclass(frozen=True)
@@ -61,6 +62,17 @@ def _extract_anthropic_text(payload: Dict[str, Any]) -> str:
     for block in payload.get("content", []):
         if block.get("type") == "text" and block.get("text"):
             parts.append(str(block["text"]))
+    return "\n".join(parts).strip()
+
+
+def _extract_gemini_text(payload: Dict[str, Any]) -> str:
+    parts = []
+    for candidate in payload.get("candidates", []):
+        content = candidate.get("content", {})
+        for part in content.get("parts", []):
+            text = part.get("text")
+            if text:
+                parts.append(str(text))
     return "\n".join(parts).strip()
 
 
@@ -112,6 +124,37 @@ def _call_anthropic(package: Dict[str, Any], api_key: str, model: str, timeout_s
     return text
 
 
+def _call_gemini(package: Dict[str, Any], api_key: str, model: str, timeout_seconds: float) -> str:
+    response = httpx.post(
+        GEMINI_GENERATE_URL.format(model=model),
+        headers={
+            "x-goog-api-key": api_key,
+            "Content-Type": "application/json",
+        },
+        json={
+            "systemInstruction": {
+                "parts": [{"text": package["system"]}],
+            },
+            "contents": [
+                {
+                    "role": "user",
+                    "parts": [{"text": _prompt_text(package)}],
+                }
+            ],
+            "generationConfig": {
+                "maxOutputTokens": 900,
+                "temperature": 0.2,
+            },
+        },
+        timeout=timeout_seconds,
+    )
+    response.raise_for_status()
+    text = _extract_gemini_text(response.json())
+    if not text:
+        raise RuntimeError("Gemini response did not contain text output")
+    return text
+
+
 def _select_provider(requested_provider: str) -> str:
     if requested_provider != "auto":
         return requested_provider
@@ -119,6 +162,8 @@ def _select_provider(requested_provider: str) -> str:
         return "openai"
     if os.getenv("ANTHROPIC_API_KEY"):
         return "anthropic"
+    if os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY"):
+        return "gemini"
     return "deterministic"
 
 
@@ -160,8 +205,14 @@ def generate_grounded_llm_report(
             model = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-5")
             text = _call_anthropic(package, api_key, model, timeout_seconds)
             used_live_provider = True
+    elif selected_provider == "gemini":
+        api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+        if api_key:
+            model = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
+            text = _call_gemini(package, api_key, model, timeout_seconds)
+            used_live_provider = True
     elif selected_provider != "deterministic":
-        raise ValueError("provider must be one of: auto, deterministic, openai, anthropic")
+        raise ValueError("provider must be one of: auto, deterministic, openai, anthropic, gemini")
 
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / f"{comparison_id}_llm_report.md"
@@ -181,7 +232,7 @@ def generate_grounded_llm_report(
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Generate an optional live grounded LLM report.")
     parser.add_argument("comparison_id", help="Comparison artifact folder, e.g. default_run_comparison_seed20260706")
-    parser.add_argument("--provider", choices=["auto", "deterministic", "openai", "anthropic"], default="auto")
+    parser.add_argument("--provider", choices=["auto", "deterministic", "openai", "anthropic", "gemini"], default="auto")
     parser.add_argument("--artifact-dir", default=str(DEFAULT_ARTIFACT_DIR))
     parser.add_argument("--report-dir", default=str(DEFAULT_REPORT_DIR))
     parser.add_argument("--prompt-dir", default=str(DEFAULT_PROMPT_DIR))

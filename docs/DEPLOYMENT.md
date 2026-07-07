@@ -60,6 +60,8 @@ Then open the dashboard URL in a browser and confirm:
 
 The public demo does not need paid LLM keys. If you want live provider-backed reports, add one of these service environment variables to the API service:
 
+- `GEMINI_API_KEY` or `GOOGLE_API_KEY`
+- `GEMINI_MODEL`
 - `OPENAI_API_KEY`
 - `OPENAI_MODEL`
 - `ANTHROPIC_API_KEY`
@@ -72,6 +74,12 @@ The deterministic fallback remains available with:
 ```
 
 Use live providers with:
+
+```json
+{"provider": "gemini"}
+```
+
+or:
 
 ```json
 {"provider": "openai"}

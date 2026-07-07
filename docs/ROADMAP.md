@@ -43,13 +43,13 @@
 - Require citations to scenario IDs, run IDs, metric values, and policy versions. Done for run IDs and metric values; policy versions are represented by policy rungs/modes in the synthetic workflow.
 - Keep the LLM layer explanatory, not decision-authoritative. Done in the report caveat.
 - Add an LLM-ready prompt package. Done as a provider-neutral JSON export with strict grounding rules and evidence records.
-- Add an optional live model adapter that rewrites only the grounded report facts when an API key is available. Done for OpenAI and Anthropic provider keys with deterministic fallback.
+- Add an optional live model adapter that rewrites only the grounded report facts when an API key is available. Done for Gemini, OpenAI, and Anthropic provider keys with deterministic fallback.
 - Next: add streaming and provider-specific structured-output validation.
 
 ## Phase 6: Retrieval And Monitoring
 
 - Index synthetic experiment summaries and failure cases. Done for KPI rows, synthetic profiles, and grounded analyst reports.
 - Add metadata filters for scenario, policy, date, and metric type. Partly done: comparison ID, rung, NR mode, and artifact kind filters are available.
-- Add vector retrieval for RAG over evidence artifacts. Done with a dependency-free local vector index and optional Chroma backend.
+- Add vector retrieval for RAG over evidence artifacts. Done with a dependency-free local vector index and optional Chroma backend using project-owned embeddings.
 - Expose lightweight request/runtime metrics and structured logs. Done for in-process API metrics at `/metrics`; structured logs remain a future extension.
 - Next: add retrieval evaluation queries and Prometheus-compatible metrics export if needed for deployment-oriented evaluation.

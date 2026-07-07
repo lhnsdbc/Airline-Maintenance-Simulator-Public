@@ -41,7 +41,7 @@ class SearchResponse(BaseModel):
 
 
 class LlmReportRequest(BaseModel):
-    provider: str = Field(default="deterministic", pattern="^(auto|deterministic|openai|anthropic)$")
+    provider: str = Field(default="deterministic", pattern="^(auto|deterministic|openai|anthropic|gemini)$")
 
 
 class LlmReportResponse(BaseModel):

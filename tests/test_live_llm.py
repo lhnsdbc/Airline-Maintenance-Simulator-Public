@@ -88,6 +88,35 @@ class LiveLlmTests(unittest.TestCase):
         self.assertEqual(result.text, "Grounded live summary.")
         self.assertEqual(post.call_args.kwargs["json"]["store"], False)
 
+    def test_generate_report_uses_gemini_when_key_is_configured(self):
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            comparison_id = "default_run_comparison_seed1"
+            write_artifacts(root, comparison_id)
+            payload = {
+                "candidates": [{
+                    "content": {
+                        "parts": [{"text": "Gemini grounded summary."}]
+                    }
+                }]
+            }
+
+            with patch.dict(os.environ, {"GEMINI_API_KEY": "test-key", "GEMINI_MODEL": "test-gemini"}, clear=True):
+                with patch("analyst.live_llm.httpx.post", return_value=FakeResponse(payload)) as post:
+                    result = generate_grounded_llm_report(
+                        comparison_id,
+                        provider="gemini",
+                        artifact_dir=root / "artifacts",
+                        report_dir=root / "reports",
+                        prompt_dir=root / "prompts",
+                        output_dir=root / "outputs",
+                    )
+
+        self.assertTrue(result.used_live_provider)
+        self.assertEqual(result.model, "test-gemini")
+        self.assertEqual(result.text, "Gemini grounded summary.")
+        self.assertEqual(post.call_args.kwargs["headers"]["x-goog-api-key"], "test-key")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -101,6 +101,7 @@ def build_chroma_vector_index(
         ids=[doc.doc_id for doc in docs],
         documents=[doc.text for doc in docs],
         metadatas=[{**doc.metadata, "source": doc.source} for doc in docs],
+        embeddings=[_embed(doc.text) for doc in docs],
     )
     return len(docs)
 
@@ -183,7 +184,7 @@ def chroma_vector_search(
         if value
     } or None
     collection = chromadb.PersistentClient(path=str(index_dir / "chroma")).get_collection(collection_name)
-    response = collection.query(query_texts=[query], n_results=limit, where=where)
+    response = collection.query(query_embeddings=[_embed(query)], n_results=limit, where=where)
     ids = response.get("ids", [[]])[0]
     documents = response.get("documents", [[]])[0]
     metadatas = response.get("metadatas", [[]])[0]

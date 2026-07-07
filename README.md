@@ -78,6 +78,7 @@ If `mlflow` is installed, the same run params, metrics, and JSON artifacts are a
 
 ```powershell
 pip install -r requirements-mlops.txt
+py -m experiments.synthetic_experiment --scenario default_run --seed 20260706
 mlflow ui --backend-store-uri ./mlruns
 ```
 
@@ -154,11 +155,11 @@ This writes a provider-neutral JSON prompt package under `reports/llm_prompts/`.
 Generate an optional live provider-backed report from the same evidence package:
 
 ```powershell
-$env:OPENAI_API_KEY = "..."
-py -m analyst.live_llm default_run_comparison_seed20260706 --provider openai
+$env:GEMINI_API_KEY = "..."
+py -m analyst.live_llm default_run_comparison_seed20260706 --provider gemini
 ```
 
-You can also use `--provider anthropic` with `ANTHROPIC_API_KEY`. Without a provider key, the command writes the deterministic grounded report as a fallback, so local tests and CI do not depend on paid services.
+Gemini is the recommended low-cost/free-tier option for live generation. You can also use `--provider openai` with `OPENAI_API_KEY` or `--provider anthropic` with `ANTHROPIC_API_KEY`. Without a provider key, the command writes the deterministic grounded report as a fallback, so local tests and CI do not depend on paid services.
 
 ## Retrieval And Monitoring
 
@@ -181,7 +182,10 @@ For a Chroma-backed vector store, install the optional RAG dependencies and rebu
 ```powershell
 pip install -r requirements-rag.txt
 py -m retrieval.vector build --backend chroma
+py -m retrieval.vector search "predicted uncovered" --backend chroma
 ```
+
+The deployed API uses the dependency-free local vector backend by default. The Chroma backend is optional and intended for local RAG portfolio work or a larger deployment image. On Windows, Chroma's native add path can be unstable; use a Linux/container environment for the cleanest Chroma verification.
 
 It also exposes lightweight runtime monitoring at `/metrics`, including request count, failure count, generated comparison count, search count, average latency, and available artifact count.
 
