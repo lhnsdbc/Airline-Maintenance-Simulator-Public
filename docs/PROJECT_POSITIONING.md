@@ -4,7 +4,7 @@ This repository is a public synthetic-data implementation of an aircraft mainten
 
 ## Scope
 
-The project focuses on reproducible synthetic fixtures, policy comparison, experiment tracking, service interfaces, dashboarding, grounded reporting, retrieval, and lightweight monitoring.
+The project focuses on reproducible synthetic fixtures, policy comparison, experiment tracking, service interfaces, dashboarding, grounded reporting, retrieval, GenAI orchestration, and lightweight monitoring.
 
 It intentionally does not publish private operational data, derived real-input bundles, model weights, confidential reports, or private repository history.
 
@@ -16,6 +16,7 @@ It intentionally does not publish private operational data, derived real-input b
 - The FastAPI service exposes health, profile, experiment lookup, policy comparison, lexical search, vector RAG search, grounded LLM report, and runtime metrics endpoints.
 - The analyst layer creates deterministic reports, LLM-ready prompt packages, and optional Gemini/OpenAI/Anthropic-backed summaries from grounded KPI evidence.
 - Retrieval indexes local KPI/profile/report artifacts with metadata filters through lexical search, a local vector index, and an optional Chroma backend.
+- The optional LangChain orchestration layer coordinates retrieval, grounded reports, and prompt packages while keeping live model calls provider-specific and auditable.
 - Docker, Render configuration, and CI package and verify the public synthetic workflow.
 
 ## Boundaries
@@ -27,4 +28,4 @@ It intentionally does not publish private operational data, derived real-input b
 
 ## Suggested Technical Summary
 
-Public synthetic aircraft maintenance simulation and policy-evaluation platform with reproducible experiment tracking, MLflow-ready artifacts, dashboarding, FastAPI endpoints, Docker/Render packaging, RAG over generated evidence, grounded LLM reporting, and runtime monitoring.
+Public synthetic aircraft maintenance simulation and policy-evaluation platform with reproducible experiment tracking, MLflow-ready artifacts, dashboarding, FastAPI endpoints, Docker/Render packaging, RAG over generated evidence, LangChain orchestration, grounded LLM reporting, and runtime monitoring.

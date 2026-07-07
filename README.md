@@ -8,7 +8,7 @@ Public, synthetic-data version of an aircraft maintenance simulation project. Th
 - Baseline and learned maintenance-policy comparison hooks.
 - Synthetic input generation for reproducible local runs.
 - Experiment runner structure for fixed scenarios, seeds, and policy rungs.
-- Experiment tracking, dashboarding, API packaging, CI, deployment configuration, grounded LLM reporting, retrieval/RAG, and monitoring around synthetic maintenance scenarios.
+- Experiment tracking, dashboarding, API packaging, CI, deployment configuration, grounded LLM reporting, retrieval/RAG, GenAI orchestration, and monitoring around synthetic maintenance scenarios.
 
 ## Live Demo
 
@@ -26,6 +26,7 @@ The demo runs on Render free services, so the first request after inactivity may
 - `dashboard/`: Dash policy-comparison dashboard.
 - `api/`: FastAPI service for health, profiles, policy comparisons, experiment lookup, search/RAG, LLM reports, and metrics.
 - `analyst/`: grounded stakeholder report generation from KPI artifacts.
+- `orchestration/`: optional LangChain orchestration over retrieval, grounded reports, and prompt packaging.
 - `retrieval/`: lexical and vector retrieval over KPI/profile/report artifacts.
 - `docs/`: architecture, data notice, roadmap, project positioning, and publication checklist.
 
@@ -160,6 +161,17 @@ py -m analyst.live_llm default_run_comparison_seed20260706 --provider gemini
 ```
 
 Gemini is the recommended low-cost/free-tier option for live generation. You can also use `--provider openai` with `OPENAI_API_KEY` or `--provider anthropic` with `ANTHROPIC_API_KEY`. Without a provider key, the command writes the deterministic grounded report as a fallback, so local tests and CI do not depend on paid services.
+
+## GenAI Orchestration
+
+The optional LangChain path coordinates retrieval, grounded report generation, and prompt packaging into an auditable orchestration trace:
+
+```powershell
+pip install -r requirements-genai.txt
+py -m orchestration.langchain_analyst default_run_comparison_seed20260706 --question "Which policy reduces uncovered NR workload?"
+```
+
+This writes a LangChain trace under `reports/orchestration/` and a grounded prompt package under `reports/llm_prompts/`. It does not require a live model key; the provider-backed generation remains in `analyst.live_llm`.
 
 ## Retrieval And Monitoring
 

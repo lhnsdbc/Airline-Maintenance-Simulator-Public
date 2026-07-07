@@ -12,8 +12,9 @@ flowchart LR
     C --> E["Dash dashboard"]
     C --> F["FastAPI service"]
     C --> G["Retrieval index"]
-    G --> H["Grounded LLM prompt package"]
-    H --> I["Optional live LLM report"]
+    G --> H["LangChain orchestration"]
+    H --> I["Grounded LLM prompt package"]
+    I --> K["Optional live LLM report"]
     F --> J["Public deployment target"]
     E --> J
 ```
@@ -27,6 +28,7 @@ flowchart LR
 - `api/app.py` exposes health, metrics, experiment lookup, search, and policy-comparison endpoints.
 - `retrieval/search.py` provides dependency-free lexical retrieval over KPI, profile, and report artifacts.
 - `analyst/experiment_report.py`, `analyst/llm_prompt.py`, and `analyst/live_llm.py` create deterministic reports, evidence-bounded prompts, and optional provider-backed summaries.
+- `orchestration/langchain_analyst.py` provides an optional LangChain chain that coordinates artifact loading, retrieval, grounded report generation, and prompt packaging.
 
 ## Evidence Boundary
 
