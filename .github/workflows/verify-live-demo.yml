@@ -1,0 +1,29 @@
+name: verify-live-demo
+
+on:
+  workflow_dispatch:
+    inputs:
+      api_url:
+        description: "Public API URL"
+        required: true
+        default: "https://maintenance-simulator-api.onrender.com"
+      dashboard_url:
+        description: "Public dashboard URL"
+        required: true
+        default: "https://maintenance-simulator-dashboard.onrender.com"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Verify live public demo
+        run: |
+          python scripts/verify_live_demo.py \
+            --api-url "${{ inputs.api_url }}" \
+            --dashboard-url "${{ inputs.dashboard_url }}"

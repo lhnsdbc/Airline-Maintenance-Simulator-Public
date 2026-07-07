@@ -10,6 +10,15 @@ Public, synthetic-data version of an aircraft maintenance simulation project. Th
 - Experiment runner structure for fixed scenarios, seeds, and policy rungs.
 - Experiment tracking, dashboarding, API packaging, CI, deployment configuration, grounded LLM reporting, retrieval/RAG, and monitoring around synthetic maintenance scenarios.
 
+## Live Demo
+
+- Dashboard: https://maintenance-simulator-dashboard.onrender.com
+- API: https://maintenance-simulator-api.onrender.com
+- API docs: https://maintenance-simulator-api.onrender.com/docs
+- RAG example: https://maintenance-simulator-api.onrender.com/rag/search?q=predicted%20uncovered&nr_mode=predicted
+
+The demo runs on Render free services, so the first request after inactivity may take a short time to wake up.
+
 ## Project Map
 
 - `generate_dummy_data.py` and `generate_mock_nr_artifact.py`: synthetic fixture generation.
