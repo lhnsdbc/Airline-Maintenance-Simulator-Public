@@ -534,7 +534,7 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> None:
     args = build_parser().parse_args()
     app = create_app(Path(args.artifact_dir))
-    app.run_server(host=args.host, port=args.port, debug=args.debug)
+    app.run(host=args.host, port=args.port, debug=args.debug)
 
 
 if __name__ == "__main__":

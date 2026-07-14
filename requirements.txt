@@ -1,7 +1,7 @@
 coloredlogs==15.0.1
-dash==2.7.0
+dash==4.4.0
 distfit==1.4.5
-fastapi==0.115.6
+fastapi==0.139.0
 geographiclib==2.0
 gurobipy==10.0.1
 httpx==0.27.2
@@ -13,7 +13,8 @@ plotly==5.9.0
 pyodbc==4.0.32
 Pyomo==6.4.1
 pytz==2022.7
-scipy==1.7.3
+scipy==1.10.1
+starlette==1.3.1
 simpy==4.0.1
 SQLAlchemy==1.4.32
 tqdm==4.64.0

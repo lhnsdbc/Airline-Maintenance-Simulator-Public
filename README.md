@@ -2,6 +2,19 @@
 
 Public, synthetic-data version of an aircraft maintenance simulation project. The repository provides reproducible simulation fixtures, policy evaluation tooling, and service interfaces without publishing any private airline data.
 
+[![Public CI](https://github.com/lhnsdbc/Airline-Maintenance-Simulator-Public/actions/workflows/ci.yml/badge.svg)](https://github.com/lhnsdbc/Airline-Maintenance-Simulator-Public/actions/workflows/ci.yml)
+[![Quality checks](https://github.com/lhnsdbc/Airline-Maintenance-Simulator-Public/actions/workflows/quality.yml/badge.svg)](https://github.com/lhnsdbc/Airline-Maintenance-Simulator-Public/actions/workflows/quality.yml)
+[![Live demo smoke check](https://github.com/lhnsdbc/Airline-Maintenance-Simulator-Public/actions/workflows/verify-live-demo.yml/badge.svg)](https://github.com/lhnsdbc/Airline-Maintenance-Simulator-Public/actions/workflows/verify-live-demo.yml)
+
+## 60-Second Recruiter Walkthrough
+
+![A short walkthrough of selecting an experiment, comparing policy KPIs, inspecting the reserve trade-off, and reading the grounded report.](docs/assets/recruiter-demo.gif)
+
+The walkthrough follows one decision path: select a synthetic scenario, compare policy rungs, inspect the KPI and reserve trade-off, then read the evidence-bounded analyst report. All values shown are synthetic.
+
+- [Read the evaluation card](docs/EVALUATION.md) for fixed-seed distributions, KPI definitions, and limitations.
+- [Read the one-page case study](docs/CASE_STUDY.md) for the stakeholder decision narrative.
+
 ## What This Project Shows
 
 - Discrete-event simulation for aircraft operations and maintenance planning.
@@ -18,6 +31,26 @@ Public, synthetic-data version of an aircraft maintenance simulation project. Th
 - RAG example: https://maintenance-simulator-api.onrender.com/rag/search?q=predicted%20uncovered&nr_mode=predicted
 
 The demo runs on Render free services, so the first request after inactivity may take a short time to wake up.
+
+The **Live demo smoke check** badge above is the last scheduled or manual verification result. It retries cold starts and checks the API/dashboard health plus a deployed KPI-response contract; it is a maintenance signal, not a production uptime guarantee. See [the deployment runbook](docs/DEPLOYMENT.md#scheduled-demo-verification).
+
+## Engineering Evidence
+
+The front-page badges link to these checks:
+
+- **Public CI:** synthetic-fixture generation, tracked experiment, smoke workflow, unit tests, container builds, and sensitive-term scan.
+- **Quality checks:** measured unit-test coverage (saved as a CI artifact), Ruff syntax/undefined-name linting, MyPy type-checking of the deployed-demo verifier, and `pip-audit` over service dependencies.
+- **Live demo smoke check:** weekday external verification of the Render API and dashboard, including the deployed `/experiments/{id}/kpis` response contract.
+
+Run the same checks locally with:
+
+```powershell
+pip install -r requirements-dev.txt
+py -m coverage run -m unittest discover -s tests -v
+py -m ruff check api analyst dashboard experiments scripts tests --select E9,F63,F7,F82
+py -m mypy scripts/verify_live_demo.py
+py -m pip_audit -r requirements-service.txt
+```
 
 ## Project Map
 

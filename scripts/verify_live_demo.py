@@ -8,7 +8,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from typing import Any, Dict
+from typing import Any, Dict, cast
 
 
 DEFAULT_API_URL = "https://maintenance-simulator-api.onrender.com"
@@ -28,7 +28,7 @@ def _request_json(url: str, *, method: str = "GET", payload: Dict[str, Any] | No
         headers["Content-Type"] = "application/json"
     request = urllib.request.Request(url, data=data, headers=headers, method=method)
     with urllib.request.urlopen(request, timeout=timeout) as response:
-        return json.loads(response.read().decode("utf-8"))
+        return cast(Dict[str, Any], json.loads(response.read().decode("utf-8")))
 
 
 def _request_status(url: str, *, timeout: float = 20.0) -> int:
@@ -60,6 +60,17 @@ def verify(api_url: str, dashboard_url: str, attempts: int = 6, delay_seconds: f
     experiments = _retry("API experiments", lambda: _request_json(_join(api_url, "/experiments")), attempts, delay_seconds)
     assert any(item["comparison_id"] == COMPARISON_ID for item in experiments)
 
+    kpis = _retry(
+        "API KPI contract",
+        lambda: _request_json(_join(api_url, f"/experiments/{COMPARISON_ID}/kpis")),
+        attempts,
+        delay_seconds,
+    )
+    assert kpis["comparison_id"] == COMPARISON_ID
+    assert isinstance(kpis["rows"], list) and len(kpis["rows"]) >= 6
+    required_kpi_fields = {"run_id", "rung", "nr_mode", "policy_quality_score", "flights_delay_dep"}
+    assert required_kpi_fields.issubset(kpis["rows"][0])
+
     rag_path = "/rag/search?q=predicted%20uncovered&nr_mode=predicted"
     rag = _retry("RAG search", lambda: _request_json(_join(api_url, rag_path)), attempts, delay_seconds)
     assert rag["count"] >= 1
@@ -88,6 +99,7 @@ def verify(api_url: str, dashboard_url: str, attempts: int = 6, delay_seconds: f
         "api_status": api_health["status"],
         "dashboard_status": dashboard_health["status"],
         "experiment_count": len(experiments),
+        "kpi_row_count": len(kpis["rows"]),
         "rag_result_count": rag["count"],
         "llm_provider": llm["provider"],
     }

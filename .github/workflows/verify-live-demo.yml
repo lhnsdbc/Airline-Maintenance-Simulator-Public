@@ -1,6 +1,8 @@
 name: verify-live-demo
 
 on:
+  schedule:
+    - cron: "17 8 * * 1-5"
   workflow_dispatch:
     inputs:
       api_url:
@@ -23,7 +25,10 @@ jobs:
           python-version: "3.10"
 
       - name: Verify live public demo
+        env:
+          API_URL: ${{ inputs.api_url || 'https://maintenance-simulator-api.onrender.com' }}
+          DASHBOARD_URL: ${{ inputs.dashboard_url || 'https://maintenance-simulator-dashboard.onrender.com' }}
         run: |
           python scripts/verify_live_demo.py \
-            --api-url "${{ inputs.api_url }}" \
-            --dashboard-url "${{ inputs.dashboard_url }}"
+            --api-url "$API_URL" \
+            --dashboard-url "$DASHBOARD_URL"

@@ -15,6 +15,12 @@ The repository includes `render.yaml` for Render Blueprint deployment. Other con
 
 Render free services may sleep after inactivity. A cold first request can take longer than normal.
 
+## Scheduled demo verification
+
+GitHub Actions runs the [`verify-live-demo` workflow](../.github/workflows/verify-live-demo.yml) on weekday mornings and can also be run manually. It retries cold starts, checks both health endpoints, and validates the deployed KPI response shape (comparison ID, at least six rows, and required policy fields).
+
+The [workflow badge on the README](../README.md#live-demo) shows the latest scheduled or manual result. It is a maintenance signal, not an uptime SLA: Render free services can still sleep and the check does not make a production-availability claim.
+
 ## Render Blueprint
 
 1. Push the latest `main` branch to GitHub.
