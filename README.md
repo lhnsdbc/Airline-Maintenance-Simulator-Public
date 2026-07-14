@@ -164,6 +164,8 @@ The image generates synthetic fixtures and a deterministic comparison artifact d
 
 For a public demo, `render.yaml` defines separate Render web services for the API and dashboard. The dashboard uses `Dockerfile.dashboard` and serves port `8050`.
 
+An Azure Container Apps portfolio deployment is also available. It deploys the existing two Docker images with HTTPS ingress, GitHub Actions OpenID Connect authentication, Bicep infrastructure-as-code, and scale-to-zero cost controls. See [the Azure Student deployment guide](docs/AZURE_DEPLOYMENT.md).
+
 See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for the Render runbook, post-deploy checks, optional provider-key setup, and honest CV wording before/after public deployment.
 
 GitHub Actions CI is configured to install the public workflow dependencies, generate synthetic fixtures, run the tracked experiment, run the public workflow smoke script, execute tests, build both Docker images, and scan for private-source terms.
