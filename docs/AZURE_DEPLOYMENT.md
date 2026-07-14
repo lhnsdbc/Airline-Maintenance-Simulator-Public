@@ -2,7 +2,7 @@
 
 This portfolio deployment uses Azure Container Apps for the FastAPI API and Dash dashboard. Both apps have one maximum replica and scale to zero when idle. The generated synthetic inputs and default experiment artifacts are built into the images, so the demo does not need a database or persistent storage.
 
-The managed environment sends no application logs to Log Analytics. This is intentional for the low-cost demo; use the health endpoints and GitHub deployment history for initial verification.
+The deployment does not provision a dedicated Log Analytics workspace. Use the health endpoints and GitHub deployment history for initial verification.
 
 ## Cost Boundary
 
