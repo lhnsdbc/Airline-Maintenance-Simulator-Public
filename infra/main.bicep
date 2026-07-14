@@ -51,7 +51,7 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = {
           name: 'api'
           image: apiImage
           resources: {
-            cpu: 0.25
+            cpu: json('0.25')
             memory: '0.5Gi'
           }
         }
@@ -95,7 +95,7 @@ resource dashboard 'Microsoft.App/containerApps@2024-03-01' = {
           name: 'dashboard'
           image: dashboardImage
           resources: {
-            cpu: 0.25
+            cpu: json('0.25')
             memory: '0.5Gi'
           }
         }
