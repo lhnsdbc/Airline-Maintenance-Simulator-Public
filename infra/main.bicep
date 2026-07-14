@@ -12,6 +12,9 @@ param apiImage string
 @description('Public GHCR image for the Dash dashboard, including an immutable tag.')
 param dashboardImage string
 
+@description('Immutable Git revision shown by the API and dashboard.')
+param deploymentVersion string
+
 @description('Administrator login for the portfolio metadata database.')
 param sqlAdminLogin string = 'simulatoradmin'
 
@@ -139,6 +142,10 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = {
               name: 'PIPELINE_FILE_SYSTEM'
               value: 'maintenance-lake'
             }
+            {
+              name: 'APP_VERSION'
+              value: deploymentVersion
+            }
           ]
           resources: {
             cpu: json('0.25')
@@ -198,6 +205,10 @@ resource dashboard 'Microsoft.App/containerApps@2024-03-01' = {
             {
               name: 'PIPELINE_FILE_SYSTEM'
               value: 'maintenance-lake'
+            }
+            {
+              name: 'APP_VERSION'
+              value: deploymentVersion
             }
           ]
           resources: {

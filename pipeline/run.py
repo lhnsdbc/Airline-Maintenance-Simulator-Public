@@ -77,7 +77,7 @@ def _read_inputs(data_dir: Path, artifact_dir: Path) -> Dict[str, pd.DataFrame]:
     }
 
 
-def _record_metadata(status: Dict[str, Any], output_root: Path) -> None:
+def _record_metadata(status: Dict[str, Any], output_root: Path, kpis: pd.DataFrame) -> None:
     server = os.getenv("PIPELINE_SQL_SERVER")
     password = os.getenv("PIPELINE_SQL_PASSWORD")
     if not server or not password:
@@ -105,6 +105,22 @@ def _record_metadata(status: Dict[str, Any], output_root: Path) -> None:
         "started_at DATETIME2, completed_at DATETIME2, bronze_rows INT, silver_rows INT, gold_rows INT, "
         "quality_passed BIT, details NVARCHAR(MAX))"
     )
+    cursor.execute(
+        "IF OBJECT_ID('dbo.experiment_metrics', 'U') IS NULL "
+        "CREATE TABLE dbo.experiment_metrics (pipeline_run_id VARCHAR(36), experiment_run_id VARCHAR(120), "
+        "rung VARCHAR(20), nr_mode VARCHAR(20), policy_quality_score FLOAT, flights_delay_dep FLOAT, "
+        "interval_spillage FLOAT, nr_uncovered_labor_hours FLOAT)"
+    )
+    if not kpis.empty:
+        records = [
+            (
+                status["run_id"], str(row.run_id), str(row.rung), str(row.nr_mode),
+                float(row.policy_quality_score), float(row.flights_delay_dep),
+                float(row.interval_spillage), float(row.nr_uncovered_labor_hours),
+            )
+            for row in kpis.itertuples(index=False)
+        ]
+        cursor.executemany("INSERT INTO dbo.experiment_metrics VALUES (%s, %s, %s, %s, %s, %s, %s, %s)", records)
     cursor.execute(
         "INSERT INTO dbo.pipeline_runs VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
         (
@@ -165,7 +181,7 @@ def run_pipeline(data_dir: Path, artifact_dir: Path, output_root: Path, writer: 
         "lake_layers": ["bronze", "silver", "gold"],
     }
     writer.write_bytes("gold/pipeline_status/latest.json", json.dumps(status, indent=2).encode("utf-8"))
-    _record_metadata(status, output_root)
+    _record_metadata(status, output_root, inputs["kpis"])
     return status
 
 

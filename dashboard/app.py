@@ -142,6 +142,7 @@ def create_app(artifact_dir: Path = DEFAULT_ARTIFACT_DIR) -> Dash:
                             html.Div("Synthetic Portfolio Evidence", className="eyebrow"),
                             html.H1("Maintenance Policy Evaluation"),
                             html.P("Policy rungs, non-routine workload signals, and tracked KPI artifacts."),
+                            html.Div(f"Deployment: {os.getenv('APP_VERSION', 'local')}", className="refresh-status"),
                             html.Div(id="refresh-status", className="refresh-status"),
                             html.Div(id="pipeline-status", className="refresh-status"),
                         ],

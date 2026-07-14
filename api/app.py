@@ -148,6 +148,7 @@ def create_app() -> FastAPI:
     def health() -> Dict[str, Any]:
         return {
             "status": "ok",
+            "deployment_version": os.getenv("APP_VERSION", "local"),
             "data_generated": (DATA_DIR / "input").exists(),
             "artifact_dir": str(ARTIFACT_DIR),
             "pipeline_status": _pipeline_status()["status"],
@@ -157,6 +158,7 @@ def create_app() -> FastAPI:
     def service_index() -> Dict[str, Any]:
         return {
             "name": "Aircraft Maintenance ML Simulator API",
+            "deployment_version": os.getenv("APP_VERSION", "local"),
             "scope": "public synthetic-data demo",
             "docs_url": "/docs",
             "health_url": "/health",

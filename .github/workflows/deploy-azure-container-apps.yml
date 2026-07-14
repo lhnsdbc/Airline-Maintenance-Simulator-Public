@@ -13,6 +13,10 @@ on:
         required: true
         default: false
         type: boolean
+  workflow_run:
+    workflows: [public-simulator-ci]
+    types: [completed]
+    branches: [main]
 
 permissions:
   contents: read
@@ -22,12 +26,16 @@ permissions:
 env:
   API_IMAGE: ghcr.io/lhnsdbc/aircraft-maintenance-simulator-api
   DASHBOARD_IMAGE: ghcr.io/lhnsdbc/aircraft-maintenance-simulator-dashboard
+  DEPLOY_SHA: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+  RESOURCE_GROUP: ${{ inputs.resource_group || 'rg-aircraft-maintenance-demo' }}
 
 jobs:
   build_images:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.DEPLOY_SHA }}
 
       - uses: docker/login-action@v3
         with:
@@ -40,7 +48,7 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ env.API_IMAGE }}:${{ github.sha }}
+            ${{ env.API_IMAGE }}:${{ env.DEPLOY_SHA }}
             ${{ env.API_IMAGE }}:main
 
       - uses: docker/build-push-action@v6
@@ -49,15 +57,17 @@ jobs:
           file: Dockerfile.dashboard
           push: true
           tags: |
-            ${{ env.DASHBOARD_IMAGE }}:${{ github.sha }}
+            ${{ env.DASHBOARD_IMAGE }}:${{ env.DEPLOY_SHA }}
             ${{ env.DASHBOARD_IMAGE }}:main
 
   deploy:
     needs: build_images
-    if: inputs.deploy
+    if: (github.event_name == 'workflow_dispatch' && inputs.deploy) || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.DEPLOY_SHA }}
 
       - uses: azure/login@v2
         with:
@@ -70,9 +80,10 @@ jobs:
           inlineScript: |
             az bicep install
             az deployment group create \
-              --resource-group "${{ inputs.resource_group }}" \
+              --resource-group "${{ env.RESOURCE_GROUP }}" \
               --template-file infra/main.bicep \
               --parameters \
-                apiImage="${{ env.API_IMAGE }}:${{ github.sha }}" \
-                dashboardImage="${{ env.DASHBOARD_IMAGE }}:${{ github.sha }}" \
+                apiImage="${{ env.API_IMAGE }}:${{ env.DEPLOY_SHA }}" \
+                dashboardImage="${{ env.DASHBOARD_IMAGE }}:${{ env.DEPLOY_SHA }}" \
+                deploymentVersion="${{ env.DEPLOY_SHA }}" \
                 sqlAdminPassword="${{ secrets.AZURE_SQL_ADMIN_PASSWORD }}"
