@@ -23,6 +23,11 @@ resource environment 'Microsoft.App/managedEnvironments@2024-03-01' = {
   name: environmentName
   location: location
   tags: commonTags
+  properties: {
+    appLogsConfiguration: {
+      destination: 'azure-monitor'
+    }
+  }
 }
 
 resource api 'Microsoft.App/containerApps@2024-03-01' = {
