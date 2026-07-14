@@ -53,6 +53,16 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertGreaterEqual(response.json()["request_count"], 1)
 
+    def test_pipeline_status_endpoint_is_available(self):
+        from fastapi.testclient import TestClient
+
+        from api.app import create_app
+
+        response = TestClient(create_app()).get("/pipeline-status")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(response.json()["status"], {"succeeded", "failed_quality", "not_run"})
+
 
 if __name__ == "__main__":
     unittest.main()

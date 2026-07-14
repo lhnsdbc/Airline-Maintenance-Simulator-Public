@@ -74,4 +74,5 @@ jobs:
               --template-file infra/main.bicep \
               --parameters \
                 apiImage="${{ env.API_IMAGE }}:${{ github.sha }}" \
-                dashboardImage="${{ env.DASHBOARD_IMAGE }}:${{ github.sha }}"
+                dashboardImage="${{ env.DASHBOARD_IMAGE }}:${{ github.sha }}" \
+                sqlAdminPassword="${{ secrets.AZURE_SQL_ADMIN_PASSWORD }}"

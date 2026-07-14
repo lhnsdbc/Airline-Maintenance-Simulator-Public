@@ -16,6 +16,7 @@ from analyst.llm_prompt import build_prompt_package
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_ARTIFACT_DIR = REPO_ROOT / "artifacts" / "experiments"
+DEFAULT_PIPELINE_STATUS_PATH = REPO_ROOT / "artifacts" / "data_lake" / "gold" / "pipeline_status" / "latest.json"
 
 METRIC_OPTIONS = [
     ("Policy quality", "policy_quality_score"),
@@ -39,6 +40,12 @@ def load_comparisons(artifact_dir: Path = DEFAULT_ARTIFACT_DIR) -> pd.DataFrame:
     if not frames:
         return pd.DataFrame()
     return pd.concat(frames, ignore_index=True)
+
+
+def load_pipeline_status(path: Path = DEFAULT_PIPELINE_STATUS_PATH) -> dict:
+    if not path.exists():
+        return {"status": "not_run"}
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def _empty_figure(message: str):
@@ -124,6 +131,7 @@ def create_app(artifact_dir: Path = DEFAULT_ARTIFACT_DIR) -> Dash:
                             html.H1("Maintenance Policy Evaluation"),
                             html.P("Policy rungs, non-routine workload signals, and tracked KPI artifacts."),
                             html.Div(id="refresh-status", className="refresh-status"),
+                            html.Div(id="pipeline-status", className="refresh-status"),
                         ],
                         className="title-block",
                     ),
@@ -417,18 +425,21 @@ def create_app(artifact_dir: Path = DEFAULT_ARTIFACT_DIR) -> Dash:
         Output("comparison-select", "options"),
         Output("comparison-select", "value"),
         Output("refresh-status", "children"),
+        Output("pipeline-status", "children"),
         Input("artifact-refresh", "n_intervals"),
         State("comparison-select", "value"),
     )
     def refresh_artifacts(_n_intervals, selected_comparison):
         fresh = load_comparisons(artifact_dir)
+        pipeline = load_pipeline_status()
+        pipeline_message = f"Pipeline: {pipeline['status']}" if pipeline.get("status") != "not_run" else "Pipeline: not run"
         if fresh.empty:
-            return [], [], None, "No experiment artifacts loaded yet."
+            return [], [], None, "No experiment artifacts loaded yet.", pipeline_message
 
         fresh_comparisons = sorted(fresh["comparison_id"].unique())
         comparison_id = selected_comparison if selected_comparison in fresh_comparisons else fresh_comparisons[-1]
         status = f"Loaded {len(fresh)} run rows from {len(fresh_comparisons)} comparison set(s)."
-        return fresh.to_dict("records"), _comparison_options(fresh_comparisons), comparison_id, status
+        return fresh.to_dict("records"), _comparison_options(fresh_comparisons), comparison_id, status, pipeline_message
 
     @app.callback(
         Output("metric-strip", "children"),

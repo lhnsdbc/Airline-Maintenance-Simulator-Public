@@ -21,6 +21,7 @@ from retrieval.vector import DEFAULT_VECTOR_DIR, vector_search
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = REPO_ROOT / "Data"
 ARTIFACT_DIR = REPO_ROOT / "artifacts" / "experiments"
+PIPELINE_STATUS_PATH = REPO_ROOT / "artifacts" / "data_lake" / "gold" / "pipeline_status" / "latest.json"
 
 
 class ComparePoliciesRequest(BaseModel):
@@ -103,6 +104,12 @@ def _comparison_dirs() -> List[Path]:
     return sorted(ARTIFACT_DIR.glob("*_comparison_seed*"))
 
 
+def _pipeline_status() -> Dict[str, Any]:
+    if not PIPELINE_STATUS_PATH.exists():
+        return {"status": "not_run"}
+    return _read_json(PIPELINE_STATUS_PATH)
+
+
 def create_app() -> FastAPI:
     runtime_metrics = RuntimeMetrics()
     app = FastAPI(
@@ -131,6 +138,7 @@ def create_app() -> FastAPI:
             "status": "ok",
             "data_generated": (DATA_DIR / "input").exists(),
             "artifact_dir": str(ARTIFACT_DIR),
+            "pipeline_status": _pipeline_status()["status"],
         }
 
     @app.get("/")
@@ -145,7 +153,12 @@ def create_app() -> FastAPI:
             "lexical_search_example": "/search?q=predicted%20uncovered&nr_mode=predicted",
             "rag_search_example": "/rag/search?q=predicted%20uncovered&nr_mode=predicted",
             "llm_report_example": "/experiments/default_run_comparison_seed20260706/llm-report",
+            "pipeline_status_url": "/pipeline-status",
         }
+
+    @app.get("/pipeline-status")
+    def pipeline_status() -> Dict[str, Any]:
+        return _pipeline_status()
 
     @app.get("/profile/{scenario}")
     def profile(scenario: str) -> Dict[str, Any]:

@@ -2,6 +2,8 @@
 
 This portfolio deployment uses Azure Container Apps for the FastAPI API and Dash dashboard. Both apps have one maximum replica and scale to zero when idle. The generated synthetic inputs and default experiment artifacts are built into the images, so the demo does not need a database or persistent storage.
 
+The upgraded deployment also provisions an ADLS Gen2-compatible storage account with Bronze, Silver, and Gold paths, a daily Container Apps Job, and an Azure SQL Database for pipeline-run metadata. The job uses the API image and writes synthetic-only data. A Databricks-compatible PySpark counterpart is available at `databricks/etl_bronze_silver_gold.py`; it is source code only and does not provision Databricks.
+
 The managed environment uses Azure Monitor as its log destination, but this deployment creates no diagnostic setting or dedicated Log Analytics workspace. Use the health endpoints and GitHub deployment history for initial verification.
 
 ## Cost Boundary
@@ -50,12 +52,13 @@ Wait until the provider query returns `Registered` before deploying. If `az ad a
 ## GitHub Setup And First Deployment
 
 1. In the GitHub repository, add three Actions secrets using the values Cloud Shell printed: `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, and `AZURE_SUBSCRIPTION_ID`.
-2. Open **Actions > Deploy Azure Container Apps > Run workflow**. Keep `deploy` unchecked for the first run. This builds and publishes both container images.
-3. In GitHub, open the two newly created packages and set their visibility to **Public**:
+2. Add an `AZURE_SQL_ADMIN_PASSWORD` secret with a new strong password. It is passed directly to Azure as a secure deployment parameter and is never committed to the repository.
+3. Open **Actions > Deploy Azure Container Apps > Run workflow**. Keep `deploy` unchecked for the first run. This builds and publishes both container images.
+4. In GitHub, open the two newly created packages and set their visibility to **Public**:
    - `aircraft-maintenance-simulator-api`
    - `aircraft-maintenance-simulator-dashboard`
-4. Run the workflow again with `deploy` checked. It deploys the exact images built from that commit using OpenID Connect; no Azure password or client secret is stored in GitHub.
-5. In the completed workflow, open the Azure CLI step and copy `apiUrl` and `dashboardUrl` from the deployment output.
+5. Run the workflow again with `deploy` checked. It deploys the exact images built from that commit using OpenID Connect; no Azure password or client secret is stored in GitHub.
+6. In the completed workflow, open the Azure CLI step and copy `apiUrl` and `dashboardUrl` from the deployment output.
 
 ## Verification
 

@@ -5,7 +5,7 @@ from tempfile import TemporaryDirectory
 
 import pandas as pd
 
-from dashboard.app import _add_marker_size, _build_llm_panel_content, create_app, load_comparisons
+from dashboard.app import _add_marker_size, _build_llm_panel_content, create_app, load_comparisons, load_pipeline_status
 
 
 class DashboardTests(unittest.TestCase):
@@ -54,6 +54,12 @@ class DashboardTests(unittest.TestCase):
         sized = _add_marker_size(df)
 
         self.assertTrue((sized["marker_size_score"] > 0).all())
+
+    def test_pipeline_status_defaults_when_not_written(self):
+        with TemporaryDirectory() as tmp:
+            status = load_pipeline_status(Path(tmp) / "latest.json")
+
+        self.assertEqual(status["status"], "not_run")
 
     def test_llm_panel_builds_grounded_report_and_prompt_package(self):
         with TemporaryDirectory() as tmp:
