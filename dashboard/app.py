@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 
 import pandas as pd
@@ -43,6 +44,17 @@ def load_comparisons(artifact_dir: Path = DEFAULT_ARTIFACT_DIR) -> pd.DataFrame:
 
 
 def load_pipeline_status(path: Path = DEFAULT_PIPELINE_STATUS_PATH) -> dict:
+    connection_string = os.getenv("PIPELINE_STORAGE_CONNECTION_STRING")
+    if connection_string:
+        try:
+            from azure.storage.blob import BlobServiceClient
+
+            container = BlobServiceClient.from_connection_string(connection_string).get_container_client(
+                os.getenv("PIPELINE_FILE_SYSTEM", "maintenance-lake")
+            )
+            return json.loads(container.download_blob("gold/pipeline_status/latest.json").readall())
+        except Exception:
+            pass
     if not path.exists():
         return {"status": "not_run"}
     return json.loads(path.read_text(encoding="utf-8"))

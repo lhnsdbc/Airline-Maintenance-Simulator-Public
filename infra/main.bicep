@@ -62,6 +62,8 @@ resource dataLakeFileSystem 'Microsoft.Storage/storageAccounts/blobServices/cont
   }
 }
 
+var storageConnectionString = 'DefaultEndpointsProtocol=https;AccountName=${storage.name};AccountKey=${storage.listKeys().keys[0].value};EndpointSuffix=${az.environment().suffixes.storage}'
+
 resource sqlServer 'Microsoft.Sql/servers@2023-08-01-preview' = {
   name: sqlServerName
   location: location
@@ -110,6 +112,12 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = {
     managedEnvironmentId: environment.id
     configuration: {
       activeRevisionsMode: 'Single'
+      secrets: [
+        {
+          name: 'storage-connection-string'
+          value: storageConnectionString
+        }
+      ]
       ingress: {
         external: true
         targetPort: 8000
@@ -122,6 +130,16 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = {
         {
           name: 'api'
           image: apiImage
+          env: [
+            {
+              name: 'PIPELINE_STORAGE_CONNECTION_STRING'
+              secretRef: 'storage-connection-string'
+            }
+            {
+              name: 'PIPELINE_FILE_SYSTEM'
+              value: 'maintenance-lake'
+            }
+          ]
           resources: {
             cpu: json('0.25')
             memory: '0.5Gi'
@@ -154,6 +172,12 @@ resource dashboard 'Microsoft.App/containerApps@2024-03-01' = {
     managedEnvironmentId: environment.id
     configuration: {
       activeRevisionsMode: 'Single'
+      secrets: [
+        {
+          name: 'storage-connection-string'
+          value: storageConnectionString
+        }
+      ]
       ingress: {
         external: true
         targetPort: 8050
@@ -166,6 +190,16 @@ resource dashboard 'Microsoft.App/containerApps@2024-03-01' = {
         {
           name: 'dashboard'
           image: dashboardImage
+          env: [
+            {
+              name: 'PIPELINE_STORAGE_CONNECTION_STRING'
+              secretRef: 'storage-connection-string'
+            }
+            {
+              name: 'PIPELINE_FILE_SYSTEM'
+              value: 'maintenance-lake'
+            }
+          ]
           resources: {
             cpu: json('0.25')
             memory: '0.5Gi'
@@ -211,7 +245,7 @@ resource pipelineJob 'Microsoft.App/jobs@2024-03-01' = {
       secrets: [
         {
           name: 'storage-connection-string'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${storage.name};AccountKey=${storage.listKeys().keys[0].value};EndpointSuffix=${az.environment().suffixes.storage}'
+          value: storageConnectionString
         }
         {
           name: 'sql-admin-password'
