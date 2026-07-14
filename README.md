@@ -4,7 +4,26 @@ Public, synthetic-data version of an aircraft maintenance simulation project. Th
 
 [![Public CI](https://github.com/lhnsdbc/Airline-Maintenance-Simulator-Public/actions/workflows/ci.yml/badge.svg)](https://github.com/lhnsdbc/Airline-Maintenance-Simulator-Public/actions/workflows/ci.yml)
 [![Quality checks](https://github.com/lhnsdbc/Airline-Maintenance-Simulator-Public/actions/workflows/quality.yml/badge.svg)](https://github.com/lhnsdbc/Airline-Maintenance-Simulator-Public/actions/workflows/quality.yml)
-[![Live demo smoke check](https://github.com/lhnsdbc/Airline-Maintenance-Simulator-Public/actions/workflows/verify-live-demo.yml/badge.svg)](https://github.com/lhnsdbc/Airline-Maintenance-Simulator-Public/actions/workflows/verify-live-demo.yml)
+[![Azure release](https://github.com/lhnsdbc/Airline-Maintenance-Simulator-Public/actions/workflows/deploy-azure-container-apps.yml/badge.svg)](https://github.com/lhnsdbc/Airline-Maintenance-Simulator-Public/actions/workflows/deploy-azure-container-apps.yml)
+
+## Live Azure Data Platform
+
+- [Dashboard](https://maintenance-simulator-dashboard.delightfulgrass-284d4865.francecentral.azurecontainerapps.io/)
+- [FastAPI service](https://maintenance-simulator-api.delightfulgrass-284d4865.francecentral.azurecontainerapps.io/)
+- [API documentation](https://maintenance-simulator-api.delightfulgrass-284d4865.francecentral.azurecontainerapps.io/docs)
+- [Latest pipeline status](https://maintenance-simulator-api.delightfulgrass-284d4865.francecentral.azurecontainerapps.io/pipeline-status)
+- [Case study](docs/CASE_STUDY.md)
+
+This public deployment runs in Azure France Central. It has verified API/dashboard health and a successful scheduled synthetic ETL execution. First requests can be slower because the web services scale from zero when idle.
+
+```mermaid
+flowchart LR
+    GH["GitHub Actions: test, build, deploy"] --> CA["Azure Container Apps: FastAPI + Dash"]
+    GH --> JOB["Container Apps Job: daily ETL"]
+    JOB --> ADLS["ADLS Gen2: Bronze / Silver / Gold"]
+    JOB --> SQL["Azure SQL: pipeline runs + KPI metadata"]
+    ADLS --> CA
+```
 
 ## 60-Second Recruiter Walkthrough
 
@@ -21,16 +40,17 @@ The walkthrough follows one decision path: select a synthetic scenario, compare 
 - Baseline and learned maintenance-policy comparison hooks.
 - Synthetic input generation for reproducible local runs.
 - Experiment runner structure for fixed scenarios, seeds, and policy rungs.
-- Experiment tracking, dashboarding, API packaging, CI, deployment configuration, grounded LLM reporting, retrieval/RAG, GenAI orchestration, and monitoring around synthetic maintenance scenarios.
+- Azure data engineering: scheduled ETL, ADLS Gen2 Bronze/Silver/Gold layers, Azure SQL metadata, Bicep infrastructure, and automated GitHub Actions deployment through OpenID Connect.
+- Optional supporting features: grounded LLM reporting, retrieval/RAG, and LangChain orchestration over synthetic experiment evidence.
 
-## Live Demo
+## Legacy Render Demo
 
 - Dashboard: https://maintenance-simulator-dashboard.onrender.com
 - API: https://maintenance-simulator-api.onrender.com
 - API docs: https://maintenance-simulator-api.onrender.com/docs
 - RAG example: https://maintenance-simulator-api.onrender.com/rag/search?q=predicted%20uncovered&nr_mode=predicted
 
-The demo runs on Render free services, so the first request after inactivity may take a short time to wake up.
+The Azure deployment above is the primary portfolio demonstration. These Render links remain as an earlier deployment target.
 
 The **Live demo smoke check** badge above is the last scheduled or manual verification result. It retries cold starts and checks the API/dashboard health plus a deployed KPI-response contract; it is a maintenance signal, not a production uptime guarantee. See [the deployment runbook](docs/DEPLOYMENT.md#scheduled-demo-verification).
 
@@ -58,6 +78,9 @@ py -m pip_audit -r requirements-service.txt
 - `experiments/`: tracked deterministic policy-comparison workflow.
 - `dashboard/`: Dash policy-comparison dashboard.
 - `api/`: FastAPI service for health, profiles, policy comparisons, experiment lookup, search/RAG, LLM reports, and metrics.
+- `pipeline/`: scheduled Bronze/Silver/Gold ETL, data-quality checks, and pipeline metadata writer.
+- `infra/`: Bicep for Container Apps, Container Apps Job, ADLS Gen2-compatible storage, and Azure SQL.
+- `databricks/`: PySpark/Delta-compatible counterpart for a future Databricks job; it is not a deployed Databricks workspace.
 - `analyst/`: grounded stakeholder report generation from KPI artifacts.
 - `orchestration/`: optional LangChain orchestration over retrieval, grounded reports, and prompt packaging.
 - `retrieval/`: lexical and vector retrieval over KPI/profile/report artifacts.
@@ -162,9 +185,7 @@ docker run --rm -p 8000:8000 aircraft-maintenance-ml-simulator
 
 The image generates synthetic fixtures and a deterministic comparison artifact during build, then serves the API on port `8000`.
 
-For a public demo, `render.yaml` defines separate Render web services for the API and dashboard. The dashboard uses `Dockerfile.dashboard` and serves port `8050`.
-
-An Azure Container Apps portfolio deployment is also available. It deploys the existing two Docker images with HTTPS ingress, GitHub Actions OpenID Connect authentication, Bicep infrastructure-as-code, and scale-to-zero cost controls. See [the Azure Student deployment guide](docs/AZURE_DEPLOYMENT.md).
+The primary public demo runs on Azure Container Apps. GitHub Actions tests each main-branch change, then builds and deploys immutable container images through OpenID Connect. Bicep provisions the web services, scheduled ETL job, ADLS Gen2-compatible storage, and Azure SQL metadata layer. See [the Azure Student deployment guide](docs/AZURE_DEPLOYMENT.md).
 
 See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for the Render runbook, post-deploy checks, optional provider-key setup, and honest CV wording before/after public deployment.
 

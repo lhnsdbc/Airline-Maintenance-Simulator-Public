@@ -1,6 +1,6 @@
 # Azure Student Deployment
 
-This portfolio deployment uses Azure Container Apps for the FastAPI API and Dash dashboard. Both apps have one maximum replica and scale to zero when idle. The generated synthetic inputs and default experiment artifacts are built into the images, so the demo does not need a database or persistent storage.
+This portfolio deployment uses Azure Container Apps for the FastAPI API and Dash dashboard. Both apps have one maximum replica and scale to zero when idle. Generated synthetic inputs and default experiment artifacts are built into the images; the scheduled pipeline persists its Bronze/Silver/Gold outputs and run status separately.
 
 The upgraded deployment also provisions an ADLS Gen2-compatible storage account with Bronze, Silver, and Gold paths, a daily Container Apps Job, and an Azure SQL Database for pipeline-run metadata. The job uses the API image and writes synthetic-only data. A Databricks-compatible PySpark counterpart is available at `databricks/etl_bronze_silver_gold.py`; it is source code only and does not provision Databricks.
 
@@ -8,7 +8,7 @@ The managed environment uses Azure Monitor as its log destination, but this depl
 
 ## Cost Boundary
 
-Use this design only for a low-traffic portfolio demo. It deliberately excludes virtual machines, Kubernetes, Azure ML, databases, virtual networking, custom domains, paid LLM calls, and Azure Container Registry.
+Use this design only for a low-traffic portfolio demo. It deliberately excludes virtual machines, Kubernetes, Azure ML, virtual networking, custom domains, paid LLM calls, and Azure Container Registry. It does include small ADLS Gen2-compatible storage and a serverless Azure SQL metadata database.
 
 Azure Container Apps includes a monthly free allowance of 180,000 vCPU-seconds, 360,000 GiB-seconds, and 2 million HTTP requests per subscription. Scale-to-zero avoids runtime usage while no replica is running. Check your Azure for Students balance before and after the first deployment. A budget notification is useful, but it does not stop resources.
 
