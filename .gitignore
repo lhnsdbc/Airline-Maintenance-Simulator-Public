@@ -4,6 +4,7 @@ __pycache__/
 .venv/
 .venv1/
 .venv*/
+.codex-rl-deps/
 .idea/
 
 # Generated simulator data and outputs.

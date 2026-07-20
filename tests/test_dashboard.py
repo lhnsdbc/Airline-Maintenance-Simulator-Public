@@ -5,7 +5,7 @@ from tempfile import TemporaryDirectory
 
 import pandas as pd
 
-from dashboard.app import _add_marker_size, _build_llm_panel_content, create_app, load_comparisons, load_pipeline_status
+from dashboard.app import _add_marker_size, _build_llm_panel_content, _build_rl_system_panel, create_app, load_comparisons, load_pipeline_status
 
 
 class DashboardTests(unittest.TestCase):
@@ -94,6 +94,12 @@ class DashboardTests(unittest.TestCase):
         self.assertIn("Grounded Experiment Analyst Report", report)
         self.assertIn("Use only the evidence JSON", package["system"])
         self.assertEqual(package["evidence"]["kpi_records"][0]["run_id"], "run_a")
+
+    def test_rl_system_panel_discloses_when_no_artifact_exists(self):
+        with TemporaryDirectory() as tmp:
+            panel = _build_rl_system_panel("missing", Path(tmp))
+
+        self.assertIn("No RL systems artifact", str(panel))
 
 
 if __name__ == "__main__":

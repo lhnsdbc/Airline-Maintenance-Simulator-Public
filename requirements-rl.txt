@@ -1,0 +1,3 @@
+# Optional local-only dependencies for the synthetic MoE/DDP training demonstration.
+# Use the CPU index when no CUDA-compatible PyTorch installation is available.
+torch>=2.5,<2.7

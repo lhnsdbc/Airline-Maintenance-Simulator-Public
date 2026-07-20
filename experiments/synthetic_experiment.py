@@ -21,6 +21,7 @@ import numpy as np
 import pandas as pd
 
 from experiments.tracking import ExperimentRecorder, try_log_mlflow, write_json
+from experiments.rl_llm_evaluation import build_evaluation_artifact, write_evaluation_artifact
 
 
 RUNG_FACTORS = {
@@ -214,6 +215,13 @@ def run_experiment(args: argparse.Namespace) -> Path:
     _write_csv(summary_dir / "kpis.csv", comparison_rows)
     write_json(summary_dir / "synthetic_profile.json", profile)
     (summary_dir / "summary.md").write_text(_summary_markdown(profile, comparison_rows), encoding="utf-8")
+    evaluation_artifact = build_evaluation_artifact(
+        summary_dir.name,
+        pd.DataFrame(comparison_rows),
+        profile,
+        revision,
+    )
+    write_evaluation_artifact(summary_dir, evaluation_artifact)
     best = max(comparison_rows, key=lambda row: float(row["policy_quality_score"]))
     summary_metrics = {
         "best_policy_quality_score": best["policy_quality_score"],
@@ -233,6 +241,7 @@ def run_experiment(args: argparse.Namespace) -> Path:
         summary_dir / "kpis.csv",
         summary_dir / "synthetic_profile.json",
         summary_dir / "summary.md",
+        summary_dir / "rl_llm_evaluation.json",
     ]
     summary_logged_to_mlflow = try_log_mlflow(
         experiment_name="synthetic-policy-comparison",

@@ -167,6 +167,7 @@ def create_app() -> FastAPI:
             "lexical_search_example": "/search?q=predicted%20uncovered&nr_mode=predicted",
             "rag_search_example": "/rag/search?q=predicted%20uncovered&nr_mode=predicted",
             "llm_report_example": "/experiments/default_run_comparison_seed20260706/llm-report",
+            "rl_llm_evaluation_example": "/experiments/default_run_comparison_seed20260706/rl-llm-evaluation",
             "pipeline_status_url": "/pipeline-status",
         }
 
@@ -237,6 +238,13 @@ def create_app() -> FastAPI:
         with path.open(newline="", encoding="utf-8") as f:
             rows = list(csv.DictReader(f))
         return {"comparison_id": comparison_id, "rows": rows}
+
+    @app.get("/experiments/{comparison_id}/rl-llm-evaluation")
+    def experiment_rl_llm_evaluation(comparison_id: str) -> Dict[str, Any]:
+        path = ARTIFACT_DIR / comparison_id / "rl_llm_evaluation.json"
+        if not path.resolve().is_relative_to(ARTIFACT_DIR.resolve()):
+            raise HTTPException(status_code=400, detail="Invalid comparison id")
+        return _read_json(path)
 
     @app.get("/search", response_model=SearchResponse)
     def search(

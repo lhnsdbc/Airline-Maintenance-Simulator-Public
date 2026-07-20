@@ -116,6 +116,56 @@ def _build_llm_panel_content(
     return report, json.dumps(package, indent=2, sort_keys=True)
 
 
+def _build_rl_system_panel(comparison_id: str | None, artifact_dir: Path = DEFAULT_ARTIFACT_DIR):
+    """Render the scope-labelled reward, rollout, and MoE evidence artifact."""
+
+    if comparison_id is None:
+        return html.P("Select a comparison to inspect its RL systems artifact.", className="rl-note")
+    path = artifact_dir / comparison_id / "rl_llm_evaluation.json"
+    if not path.exists():
+        return html.P("No RL systems artifact yet. Run the synthetic policy comparison to generate it.", className="rl-note")
+    artifact = json.loads(path.read_text(encoding="utf-8"))
+    best = artifact.get("best_verified_rollout")
+    if not best:
+        return html.P("The RL systems artifact contains no policy rollouts.", className="rl-note")
+
+    checks = best["verifiable_checks"]
+    failed = [name.replace("_", " ") for name, check in checks.items() if not check["passed"]]
+    training = artifact["moe_monitoring_design"].get("training_summary")
+    training_summary = (
+        f"{training['framework']} · world size {training['distributed']['world_size']} · "
+        f"validation reward {training['validation']['greedy_policy_reward']:.3f}"
+        if training
+        else "Design monitor only — run the optional MoE trainer to populate."
+    )
+    return html.Div(
+        [
+            html.Div([
+                html.Div("Scope", className="rl-label"),
+                html.Div(artifact["scope"]["label"], className="rl-value"),
+                html.P("Implements verifiable rewards and rollout observability; it does not claim LLM RLHF, LLM serving, multi-node execution, or MoE expert parallelism.", className="rl-note"),
+            ], className="rl-card"),
+            html.Div([
+                html.Div("Best verified rollout", className="rl-label"),
+                html.Div(f"{best['policy_rung']} / {best['nr_mode']}", className="rl-value"),
+                html.P(f"Reward {best['reward']:.3f} · {best['run_id']}", className="rl-note"),
+                html.P("All checks passed" if not failed else f"Failed: {', '.join(failed)}", className="rl-check-pass" if not failed else "rl-check-fail"),
+            ], className="rl-card"),
+            html.Div([
+                html.Div("MoE / DDP evidence", className="rl-label"),
+                html.Div(artifact["moe_monitoring_design"]["status"].replace("_", " "), className="rl-value rl-value-small"),
+                html.P(training_summary, className="rl-note"),
+            ], className="rl-card"),
+            html.Div([
+                html.Div("LLM-as-judge safeguard", className="rl-label"),
+                html.Div("Design only", className="rl-value rl-value-small"),
+                html.P(artifact["llm_as_judge_protocol"]["calibration_plan"], className="rl-note"),
+            ], className="rl-card"),
+        ],
+        className="rl-system-grid",
+    )
+
+
 def create_app(artifact_dir: Path = DEFAULT_ARTIFACT_DIR) -> Dash:
     app = Dash(__name__)
     df = load_comparisons(artifact_dir)
@@ -225,6 +275,17 @@ def create_app(artifact_dir: Path = DEFAULT_ARTIFACT_DIR) -> Dash:
                     ),
                 ],
                 className="llm-grid",
+            ),
+            html.Div(
+                [
+                    html.H2("RL Training Systems Extension"),
+                    html.P(
+                        "Verifiable reward audit, rollout schema, and optional small-scale MoE/DDP evidence.",
+                        className="panel-subtitle",
+                    ),
+                    html.Div(id="rl-system-panel"),
+                ],
+                className="panel rl-system-panel",
             ),
             html.Div(
                 [
@@ -391,6 +452,18 @@ def create_app(artifact_dir: Path = DEFAULT_ARTIFACT_DIR) -> Dash:
                 }
                 .analyst-panel { padding: 16px; }
                 .analyst-panel h2 { margin: 0 0 12px; font-size: 18px; }
+                .panel-subtitle { margin: -4px 0 14px; color: var(--muted); font-size: 13px; }
+                .rl-system-panel { margin-top: 14px; padding: 16px; }
+                .rl-system-panel h2 { margin: 0 0 8px; font-size: 18px; }
+                .rl-system-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+                .rl-card { border: 1px solid var(--line); border-radius: 8px; padding: 13px; background: #fbfcfe; min-width: 0; }
+                .rl-label { color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+                .rl-value { margin-top: 7px; color: var(--ink); font-size: 18px; font-weight: 760; overflow-wrap: anywhere; }
+                .rl-value-small { font-size: 15px; text-transform: capitalize; }
+                .rl-note { margin: 8px 0 0; color: var(--muted); font-size: 12px; line-height: 1.42; }
+                .rl-check-pass, .rl-check-fail { margin: 8px 0 0; font-size: 12px; font-weight: 700; }
+                .rl-check-pass { color: var(--teal); }
+                .rl-check-fail { color: #b91c1c; }
                 .report-markdown {
                     color: var(--ink);
                     font-size: 14px;
@@ -420,7 +493,7 @@ def create_app(artifact_dir: Path = DEFAULT_ARTIFACT_DIR) -> Dash:
                 .table-panel h2 { margin: 0 0 12px; font-size: 18px; }
                 @media (max-width: 980px) {
                     .app-shell { padding: 16px; }
-                    .topbar, .grid, .llm-grid, .metric-strip { grid-template-columns: 1fr; }
+                    .topbar, .grid, .llm-grid, .metric-strip, .rl-system-grid { grid-template-columns: 1fr; }
                     .panel-heading { display: block; }
                     .panel-heading p { text-align: left; margin-top: 4px; }
                 }
@@ -542,6 +615,13 @@ def create_app(artifact_dir: Path = DEFAULT_ARTIFACT_DIR) -> Dash:
             return "No rows found for selected comparison.", "{}"
 
         return _build_llm_panel_content(comparison_id, current, artifact_dir)
+
+    @app.callback(
+        Output("rl-system-panel", "children"),
+        Input("comparison-select", "value"),
+    )
+    def update_rl_system_panel(comparison_id):
+        return _build_rl_system_panel(comparison_id, artifact_dir)
 
     return app
 

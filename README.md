@@ -141,6 +141,43 @@ mlflow ui --backend-store-uri ./mlruns
 
 Each comparison artifact also includes `mlflow_manifest.json`, which lists the tracked params, metrics, artifact paths, and whether MLflow logging happened in the current environment.
 
+## RL Systems Extension: Verifiable Rewards, MoE, and DDP
+
+Each synthetic policy comparison now writes `rl_llm_evaluation.json`. It makes the
+reward logic inspectable: deterministic checks for uncovered non-routine labour,
+completion factor, and interval spillage; a weighted reward breakdown; and a
+versioned rollout-trace schema. The artifact also documents an LLM-as-judge rubric
+and calibration plan, but that judge is **not** used to train a policy.
+
+The optional MoE experiment is a real, small-scale PyTorch policy-gradient trainer.
+It uses a soft router and four experts over synthetic maintenance state features,
+then records policy reward, entropy, gradient norms, expected expert load, and a
+capacity-excess proxy. It can run with PyTorch DistributedDataParallel (DDP) through
+the included local multi-process launcher; DDP shards data with `DistributedSampler`, aggregates metrics with
+`all_reduce`, and writes checkpoints from rank zero.
+
+```powershell
+pip install -r requirements-rl.txt
+py -m experiments.synthetic_experiment --scenario default_run --seed 20260706
+py -m experiments.moe_policy --scenario default_run --seed 20260706
+
+# DDP: two local processes. Use NCCL automatically when CUDA is available,
+# otherwise the demonstration uses the CPU-safe Gloo backend. This local launcher
+# also avoids a libuv rendezvous limitation in some Windows CPU PyTorch builds.
+py -m experiments.moe_policy --scenario default_run --seed 20260706 --ddp-local-processes 2
+```
+
+The dashboard renders the reward audit and MoE/DDP evidence when present; the same
+artifact is available through `GET /experiments/{comparison_id}/rl-llm-evaluation`.
+
+### Scope boundary
+
+This extension demonstrates verifiable reward design, rollout observability, a
+small MoE policy, and single-node data-parallel training. It does **not** implement
+LLM RLHF/RLAIF, high-throughput LLM inference serving, multi-node execution, MoE
+expert parallelism/all-to-all dispatch, or large-MoE training. Do not describe it as
+foundation-model post-training.
+
 ## Dashboard
 
 After creating experiment artifacts, open the policy-comparison dashboard:

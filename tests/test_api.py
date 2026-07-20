@@ -7,6 +7,13 @@ FASTAPI_AVAILABLE = importlib.util.find_spec("fastapi") is not None
 
 @unittest.skipUnless(FASTAPI_AVAILABLE, "fastapi is not installed")
 class ApiTests(unittest.TestCase):
+    def test_rl_llm_evaluation_route_is_registered(self):
+        from api.app import create_app
+
+        paths = {route.path for route in create_app().routes}
+
+        self.assertIn("/experiments/{comparison_id}/rl-llm-evaluation", paths)
+
     def test_health_endpoint(self):
         from fastapi.testclient import TestClient
 
